@@ -1,6 +1,6 @@
 # web4b-cs
 
-`web4b` is a set of **bryllite** API and `web4b-cs` is web4b package for .NET  
+`web4b` is a set of `bryllite API` and `web4b-cs` is web4b package for .NET  
 web4b supports http(s), WebSocket.  
 
 web4b is designed based on the `Ethereum API` for easy use by developers who have experienced the Ethereum API.  
