@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Bryllite</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <PackageId>Bryllite.Rpc.Web4b</PackageId>
+    <Authors>Bryllite team</Authors>
+    <Version>0.5.3.5</Version>
+    <Company>Bryllite Ltd.</Company>
+    <Description>A set of Bryllite API for .NET including Be4.API, Cyprus.API and PoA.Helper</Description>
+    <Product>Web4b-cs</Product>
+    <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageTags>bryllite web4b be4 cyprus poa</PackageTags>
+    <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5" />
+    <PackageReference Include="Secp256k1.Native" Version="0.1.20" />
+    <PackageReference Include="Secp256k1.Net" Version="0.1.54" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Utils\Pbkdf\DTO\" />
+  </ItemGroup>
+
+</Project>
