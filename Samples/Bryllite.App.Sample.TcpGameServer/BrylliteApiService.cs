@@ -19,7 +19,7 @@ namespace Bryllite.App.Sample.TcpGameServer
         public static readonly string PENDING = "pending";
         public static readonly string EARLIEST = "earliest";
 
-        public static readonly int POA_TOKEN_REFRESH = 30000;
+        public static readonly int POA_TOKEN_REFRESH = 15000;
 
         // game key
         private readonly PrivateKey gamekey;
@@ -72,13 +72,18 @@ namespace Bryllite.App.Sample.TcpGameServer
             }
             finally
             {
-                var elapsed = DateTime.Now - tokenTime;
-                if (elapsed.TotalMilliseconds >= POA_TOKEN_REFRESH)
+                lock (this)
                 {
-                    Task.Run(async () =>
+                    var elapsed = DateTime.Now - tokenTime;
+                    if (elapsed.TotalMilliseconds >= POA_TOKEN_REFRESH)
                     {
-                        await UpdatePoATokenAsync();
-                    });
+                        tokenTime = DateTime.Now;
+
+                        Task.Run(async () =>
+                        {
+                            await UpdatePoATokenAsync();
+                        });
+                    }
                 }
             }
         }
@@ -138,7 +143,7 @@ namespace Bryllite.App.Sample.TcpGameServer
             }
         }
 
-        // 내부 이체
+        // In-Game Tx
         public async Task<string> TransferAsync(string signer, string to, decimal value, decimal gas, ulong? nonce = null)
         {
             try
@@ -152,7 +157,7 @@ namespace Bryllite.App.Sample.TcpGameServer
             }
         }
 
-        // 외부 출금 이체
+        // Ex-Game Tx
         public async Task<string> PayoutAsync(string signer, string to, decimal value, decimal gas, ulong? nonce = null)
         {
             try

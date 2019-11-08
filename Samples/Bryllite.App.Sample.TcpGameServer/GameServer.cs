@@ -491,7 +491,7 @@ namespace Bryllite.App.Sample.TcpGameServer
 
                 // wait for tx completed
                 string hash = await api.WaitForTransactionConfirm(txid, 1000);
-                if (null != hash)
+                if (string.IsNullOrEmpty(hash))
                 {
                     session.Write(new GameMessage("error").With("message", "timeout"));
                     return;
