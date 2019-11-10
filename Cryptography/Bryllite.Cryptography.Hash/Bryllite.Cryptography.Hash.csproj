@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Version>0.5.3.6</Version>
+    <Authors>Bryllite Ltd.</Authors>
+    <Description>hash library for Bryllite. Keccak, SHA3, SHA2, Blake2, Ripemd</Description>
+    <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
+    <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
+    <PackageTags>bryllite hash keccak sha3 sha2 blake2 ripemd</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Base\Bryllite.Base\Bryllite.Base.csproj" />
+  </ItemGroup>
+
+</Project>
