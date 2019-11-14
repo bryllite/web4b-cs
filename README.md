@@ -9,3 +9,6 @@ web4b API package is provided to partner developers by NuGet. ([bryllite-package
 web4b Endpoint API:
 * [JsonRpc.Be4](https://github.com/bryllite/web4b-cs/wiki/JsonRpc.Be4)  
 * [JsonRpc.Cyprus](https://github.com/bryllite/web4b-cs/wiki/JsonRpc.Cyprus)  
+
+web4b samples:
+* [web4b-cs-samples](https://github.com/bryllite/web4b-cs-samples)
