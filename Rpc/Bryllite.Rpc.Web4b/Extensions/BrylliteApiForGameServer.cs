@@ -1,4 +1,5 @@
-﻿using Bryllite.Cryptography.Signers;
+﻿using Bryllite.Cryptography.Hash.Extensions;
+using Bryllite.Cryptography.Signers;
 using Bryllite.Extensions;
 using Bryllite.Utils.Auth;
 using Bryllite.Utils.Currency;
@@ -20,19 +21,20 @@ namespace Bryllite.Rpc.Web4b.Extensions
         // game server key
         private readonly PrivateKey gamekey;
 
-        // coinbox
-        private readonly string coinbox;
-
         // cyprus api
         public readonly CyprusApi Cyprus;
 
+        // coinbase address
         public string Coinbase => gamekey.Address;
-        public string CoinBox => coinbox;
 
-        public BrylliteApiForGameServer(string remote, string gamekey, string coinbox)
+        // shop address
+        public string ShopAddress { get; private set; }
+
+
+        public BrylliteApiForGameServer(string remote, string gamekey, string shopAddress)
         {
             this.gamekey = gamekey;
-            this.coinbox = coinbox;
+            ShopAddress = shopAddress;
 
             Cyprus = new CyprusApi(remote);
         }
@@ -75,35 +77,24 @@ namespace Bryllite.Rpc.Web4b.Extensions
                 string salt = hashbytes.Append(ivbytes).Append(address).ToHexString();
 
                 // access token
-                return new BAuth(token).GetAccessToken(salt);
+                return new BAuth(seed).GetAccessToken(salt);
             }
-            finally
+            catch (Exception ex)
             {
-                lock (this)
-                {
-                    var elapsed = DateTime.Now - tokenTime;
-                    if (elapsed.TotalMilliseconds >= POA_TOKEN_REFRESH)
-                    {
-                        tokenTime = DateTime.Now;
-
-                        Task.Run(async () =>
-                        {
-                            await UpdatePoATokenAsync();
-                        });
-                    }
-                }
+                Log.Warning("exception! ex=", ex);
+                return string.Empty;
             }
         }
 
-        private DateTime tokenTime = new DateTime(0);
-        private string token = Hex.ToString(SecureRandom.GetBytes(32));
-        private async Task UpdatePoATokenAsync()
+        // poa token seed
+        private string seed = Hex.ToString(SecureRandom.GetBytes(32));
+        public async Task UpdatePoATokenSeedAsync()
         {
             try
             {
-                string signature = gamekey.Sign(Hex.ToByteArray(token));
-                JsonRpc response = await Cyprus.PostAsync(new JsonRpc.Request("poa.seed", 0, token, signature));
-                token = response.Result<string>(0);
+                string signature = gamekey.Sign(Hex.ToByteArray(seed));
+                JsonRpc response = await Cyprus.PostAsync(new JsonRpc.Request("poa.seed", 0, seed, signature));
+                seed = response.Result<string>(0);
             }
             catch (Exception ex)
             {
@@ -111,17 +102,6 @@ namespace Bryllite.Rpc.Web4b.Extensions
             }
         }
 
-        public void Connect()
-        {
-            try
-            {
-                var task = UpdatePoATokenAsync();
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("exception! ex=", ex);
-            }
-        }
 
         // get user balance
         public async Task<ulong> GetBalanceAsync(string address)
@@ -219,5 +199,19 @@ namespace Bryllite.Rpc.Web4b.Extensions
             }
         }
 
+        // get user key export token
+        public async Task<string> GetKeyExportTokenAsync(string uid)
+        {
+            try
+            {
+                string signature = gamekey.Sign(Encoding.UTF8.GetBytes(uid).Hash256());
+                return await Cyprus.ExportKeyTokenAsync(uid, signature);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("exception! ex=", ex);
+                return null;
+            }
+        }
     }
 }

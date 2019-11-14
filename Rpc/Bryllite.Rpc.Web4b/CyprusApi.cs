@@ -1,7 +1,10 @@
-﻿using Bryllite.Core.Tx;
+﻿using Bryllite.Core;
+using Bryllite.Cryptography.Aes;
 using Bryllite.Cryptography.Signers;
+using Bryllite.Extensions;
 using Bryllite.Rpc.Web4b.Providers;
 using Bryllite.Utils.JsonRpc;
+using Bryllite.Utils.NabiLog;
 using Bryllite.Utils.Ntp;
 using Newtonsoft.Json.Linq;
 using System;
@@ -189,6 +192,27 @@ namespace Bryllite.Rpc.Web4b
                 {
                     if (!response.HasError)
                         return Hex.ToNumber<long>(response.Result<string>(0));
+
+                    SetLastError(response.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                SetLastError(ex.ToString());
+            }
+
+            return null;
+        }
+
+        public async Task<string> GetAddressByUid(string uid, int id = 0)
+        {
+            try
+            {
+                var response = await PostAsync(new JsonRpc.Request("cyprus_getAddressByUid", id, uid));
+                if (!ReferenceEquals(response, null))
+                {
+                    if (!response.HasError)
+                        return response.Result<string>(0);
 
                     SetLastError(response.ErrorMessage);
                 }
@@ -653,6 +677,62 @@ namespace Bryllite.Rpc.Web4b
                         return response.GetResult() ?? new JArray();
 
                     SetLastError(response.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                SetLastError(ex.ToString());
+            }
+
+            return null;
+        }
+
+        public async Task<string> ExportKeyTokenAsync(string uid, string signature, int id = 0)
+        {
+            try
+            {
+                var response = await PostAsync(new JsonRpc.Request("cyprus_exportKeyToken", id, uid, signature));
+                if (!ReferenceEquals(response, null))
+                {
+                    if (!response.HasError)
+                        return response.Result<string>(0);
+
+                    SetLastError(response.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                SetLastError(ex.ToString());
+            }
+
+            return null;
+        }
+
+        public async Task<string> ExportKeyAsync(string token, int id = 0)
+        {
+            PrivateKey nonce = PrivateKey.CreateKey();
+
+            try
+            {
+                var response = await PostAsync(new JsonRpc.Request("cyprus_exportKey", id, token, nonce.PublicKey.ToString()));
+                if (!ReferenceEquals(response, null))
+                {
+                    if (!response.HasError)
+                    {
+                        string encrypted = response.Result<string>(0);
+                        string openKey = response.Result<string>(1);
+                        string passKey = nonce.CreateSharedKey(openKey);
+
+                        // decrypt user key
+                        if (Aes256.TryDecrypt(Hex.ToByteArray(passKey), Hex.ToByteArray(encrypted), out var plain))
+                            return Hex.ToString(plain);
+
+                        SetLastError("aes-256 decrypt failed");
+                    }
+                    else
+                    {
+                        SetLastError(response.ErrorMessage);
+                    }
                 }
             }
             catch (Exception ex)

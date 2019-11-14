@@ -14,6 +14,9 @@ namespace Bryllite.Rpc.Web4b
 {
     public class PoAHelper : IDisposable
     {
+        public const string POA_REQUEST = "poa_request_subscription";
+        public const string POA_RESPONSE = "poa_response";
+
         // accessToken callback handler
         public delegate Task<string> CallbackHandler(string hash, string iv);
         private CallbackHandler callback;
@@ -84,7 +87,7 @@ namespace Bryllite.Rpc.Web4b
                 var request = JsonRpc.Parse(message);
                 switch (request.Method)
                 {
-                    case "poa.request": task = OnMessagePoARequest(request); return;
+                    case POA_REQUEST: task = OnMessagePoARequest(request); return;
                     default: break;
                 }
             }
@@ -102,7 +105,7 @@ namespace Bryllite.Rpc.Web4b
             // request for accessToken
             string accessToken = await callback?.Invoke(hash, iv);
             if (!string.IsNullOrEmpty(accessToken))
-                await connection.SendAsync(new JsonRpc.Notification("poa.response", address, accessToken).ToString(), CancellationToken.None);
+                await connection.SendAsync(new JsonRpc.Notification(POA_RESPONSE, address, accessToken).ToString(), CancellationToken.None);
         }
 
     }

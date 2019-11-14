@@ -4,13 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>0.5.3.6</Version>
+    <Version>0.5.3.7</Version>
     <Authors>Bryllite Ltd.</Authors>
     <Description>Transaction library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
     <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
     <PackageTags>bryllite transaction tx</PackageTags>
+    <RootNamespace>Bryllite.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

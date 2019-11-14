@@ -5,7 +5,7 @@ using Bryllite.Utils.Rlp;
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace Bryllite.Core.Tx
+namespace Bryllite.Core
 {
     // 트랜잭션 클래스
     public class Tx : ICloneable
@@ -18,13 +18,13 @@ namespace Bryllite.Core.Tx
         public const byte CyprusNet = 0x80;
 
         // cyprus tx opcode
-        public const byte Issue = 0x00;
-        public const byte Burn = 0x01;
-        public const byte Transfer = 0x02;
-        public const byte Payout = 0x03;
+        public const byte Transfer = 0x00;
+        public const byte Payout = 0x01;
+        public const byte Issue = 0x02;
+        public const byte Burn = 0x03;
 
         // network id
-        // bryllite.mainnet = 0x00
+        // bryllite.mainnet < 0x80
         // bryllite.cyprus >= 0x80
         protected Hex chain = MainNet;
         public byte Chain
@@ -39,14 +39,6 @@ namespace Bryllite.Core.Tx
         {
             get { return version; }
             set { version = value; }
-        }
-
-        // opcode
-        protected Hex opcode = null;
-        public byte Opcode
-        {
-            get { return opcode; }
-            private set { opcode = value; }
         }
 
         // timestamp
@@ -132,17 +124,20 @@ namespace Bryllite.Core.Tx
         // rlp stream
         public byte[] Rlp => ToRlp();
 
+        // cyprus net opcode
+        public byte Opcode => IsCyprusChain ? (byte)(Chain - CyprusNet) : byte.MaxValue;
+
+        // cyprus net?
+        public bool IsCyprusChain => Chain >= CyprusNet;
 
         // mainnet tx
         public Tx()
         {
         }
 
-        // cyprus tx
         public Tx(byte opcode)
         {
-            Chain = CyprusNet;
-            Opcode = opcode;
+            Chain = (byte)(CyprusNet + opcode);
         }
 
         protected Tx(byte[] rlp)
@@ -151,7 +146,6 @@ namespace Bryllite.Core.Tx
 
             chain = decoder.Next();
             version = decoder.Next();
-            opcode = decoder.Next();
             timestamp = decoder.Next();
             to = decoder.Next();
             value = decoder.Next();
@@ -170,12 +164,12 @@ namespace Bryllite.Core.Tx
 
         protected virtual H256 ToHash()
         {
-            return RlpEncoder.EncodeList(chain, version, opcode, timestamp, to, value, gas, nonce, data, extra).Hash256();
+            return RlpEncoder.EncodeList(chain, version, timestamp, to, value, gas, nonce, data, extra).Hash256();
         }
 
         protected virtual byte[] ToRlp()
         {
-            return RlpEncoder.EncodeList(chain, version, opcode, timestamp, to, value, gas, nonce, data, extra, seal);
+            return RlpEncoder.EncodeList(chain, version, timestamp, to, value, gas, nonce, data, extra, seal);
         }
 
         protected virtual H256 ToTxid()
@@ -190,7 +184,6 @@ namespace Bryllite.Core.Tx
             json.Put("hash", Txid);
             json.Put("chain", Hex.ToString(Chain, true));
             json.Put("version", Hex.ToString(Version, true));
-            json.Put("opcode", Hex.ToString(Opcode, true));
             json.Put("timestamp", Hex.ToString(Timestamp, true));
             json.Put<string>("from", From);
             json.Put<string>("to", To);

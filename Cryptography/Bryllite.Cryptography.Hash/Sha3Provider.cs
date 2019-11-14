@@ -1,12 +1,14 @@
-﻿using System;
+﻿using Org.BouncyCastle.Crypto.Digests;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using Org.BouncyCastle.Crypto.Digests;
+using System.Text;
 
 namespace Bryllite.Cryptography.Hash
 {
-    public class KeccakProvider
+    public class Sha3Provider
     {
-        public KeccakProvider()
+        public Sha3Provider()
         {
         }
 
@@ -77,7 +79,7 @@ namespace Bryllite.Cryptography.Hash
 
         protected static byte[] ComputeHash(byte[] bytes, int bits)
         {
-            var digest = new KeccakDigest(bits);
+            var digest = new Sha3Digest(bits);
             var output = new byte[digest.GetDigestSize()];
 
             byte[] message = bytes ?? new byte[0];

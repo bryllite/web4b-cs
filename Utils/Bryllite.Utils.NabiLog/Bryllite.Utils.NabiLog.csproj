@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.5.3.6</Version>
+    <Version>0.5.3.7</Version>
     <Authors>Bryllite Ltd.</Authors>
     <Description>Log library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>

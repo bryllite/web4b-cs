@@ -27,7 +27,6 @@ namespace Bryllite.Cryptography.Signers
 
         // public key readable
         public byte[] Key => UncompressedKey.Skip(1).ToArray();
-        public string Hex => Key.ToHexString();
 
         // x, y
         public byte[] X => Key.Left();
@@ -123,7 +122,7 @@ namespace Bryllite.Cryptography.Signers
 
         public override string ToString()
         {
-            return Hex;
+            return Hex.ToString(UncompressedKey);
         }
 
         public override int GetHashCode()
@@ -158,6 +157,26 @@ namespace Bryllite.Cryptography.Signers
         public bool Verify(Signature signature, byte[] messageHash)
         {
             return Verify(signature.Bytes, messageHash);
+        }
+
+        public static implicit operator PublicKey(byte[] bytes)
+        {
+            return TryParse(bytes, out PublicKey key) ? key : null;
+        }
+
+        public static implicit operator PublicKey(string hex)
+        {
+            return TryParse(hex, out PublicKey key) ? key : null;
+        }
+
+        public static implicit operator byte[] (PublicKey key)
+        {
+            return key?.ToByteArray();
+        }
+
+        public static implicit operator string(PublicKey key)
+        {
+            return key?.ToString();
         }
 
     }

@@ -1,4 +1,4 @@
-﻿using Bryllite.Core.Tx;
+﻿using Bryllite.Core;
 using Bryllite.Cryptography.Signers;
 using Bryllite.Rpc.Web4b.Providers;
 using Bryllite.Utils.JsonRpc;
@@ -346,7 +346,6 @@ namespace Bryllite.Rpc.Web4b
                 // make tx
                 return new Tx()
                 {
-                    Chain = Tx.MainNet,
                     Timestamp = NetTime.UnixTime,
                     To = to,
                     Value = value,

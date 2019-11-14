@@ -4,17 +4,18 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>0.5.3.6</Version>
+    <Version>0.5.3.7</Version>
     <Authors>Bryllite Ltd.</Authors>
     <Description>Web4b library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
     <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
-    <PackageTags>bryllite web4b be4 cyprus poa</PackageTags>
+    <PackageTags>bryllite rpc web4b be4 cyprus poa</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Bryllite.Core.Tx\Bryllite.Core.Tx.csproj" />
+    <ProjectReference Include="..\..\Cryptography\Bryllite.Cryptography.Aes\Bryllite.Cryptography.Aes.csproj" />
     <ProjectReference Include="..\..\Utils\Bryllite.Utils.Auth\Bryllite.Utils.Auth.csproj" />
     <ProjectReference Include="..\..\Utils\Bryllite.Utils.Currency\Bryllite.Utils.Currency.csproj" />
     <ProjectReference Include="..\..\Utils\Bryllite.Utils.JsonRpc\Bryllite.Utils.JsonRpc.csproj" />

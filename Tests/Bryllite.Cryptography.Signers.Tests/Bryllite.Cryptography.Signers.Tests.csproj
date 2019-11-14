@@ -13,8 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Utils\Bryllite.Utils.Currency\Bryllite.Utils.Currency.csproj" />
-    <ProjectReference Include="..\Bryllite.Rpc.Web4b\Bryllite.Rpc.Web4b.csproj" />
+    <ProjectReference Include="..\..\Cryptography\Bryllite.Cryptography.Signers\Bryllite.Cryptography.Signers.csproj" />
   </ItemGroup>
 
 </Project>

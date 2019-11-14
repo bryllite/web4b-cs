@@ -9,9 +9,7 @@ namespace Bryllite.Cryptography.Hash
 {
     public class Blake2sProvider
     {
-        public static readonly Blake2sProvider Instance = new Blake2sProvider();
-
-        protected Blake2sProvider()
+        public Blake2sProvider()
         {
         }
 

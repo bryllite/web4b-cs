@@ -6,9 +6,7 @@ namespace Bryllite.Cryptography.Hash
 {
     public class RipemdProvider
     {
-        public static readonly RipemdProvider Instance = new RipemdProvider();
-
-        protected RipemdProvider()
+        public RipemdProvider()
         {
         }
 

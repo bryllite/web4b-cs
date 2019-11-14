@@ -6,15 +6,15 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>0.5.3.7</Version>
     <Authors>Bryllite Ltd.</Authors>
-    <Description>application base library for Bryllite.</Description>
+    <Description>AES library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
     <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
-    <PackageTags>bryllite appbase</PackageTags>
+    <PackageTags>bryllite aes</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bryllite.Utils.NabiLog\Bryllite.Utils.NabiLog.csproj" />
+    <ProjectReference Include="..\Bryllite.Cryptography.Hash\Bryllite.Cryptography.Hash.csproj" />
   </ItemGroup>
 
 </Project>

@@ -9,7 +9,7 @@ namespace Bryllite.Cryptography.Hash.Extensions
     public static class HashExtension
     {
         // default hash provider == keccak
-        private static KeccakProvider hp = KeccakProvider.Instance;
+        private static KeccakProvider hp = new KeccakProvider();
 
         public static byte[] Hash(this byte[] message, int bits)
         {
@@ -97,7 +97,6 @@ namespace Bryllite.Cryptography.Hash.Extensions
             return Hash512(message.Append(iv));
         }
 
-        // 두 바이트 배열의 해시값이 동일한가?
         public static bool HashEquals(this byte[] left, byte[] right)
         {
             if (ReferenceEquals(left, right)) return true;

@@ -6,9 +6,7 @@ namespace Bryllite.Cryptography.Hash
 {
     public class Sha2Provider
     {
-        public static readonly Sha2Provider Instance = new Sha2Provider();
-
-        protected Sha2Provider()
+        public Sha2Provider()
         {
         }
 
