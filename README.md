@@ -4,7 +4,7 @@
 web4b supports http(s), WebSocket.  
 
 web4b is designed based on the `Ethereum API` for easy use by developers who have experienced the Ethereum API.  
-web4b API package is provided to partner developers by NuGet.  
+web4b API package is provided to partner developers by NuGet. ([bryllite-packages](https://www.nuget.org/profiles/bryllite))  
 
 web4b Endpoint API:
 * [JsonRpc.Be4](https://github.com/bryllite/web4b-cs/wiki/JsonRpc.Be4)  
