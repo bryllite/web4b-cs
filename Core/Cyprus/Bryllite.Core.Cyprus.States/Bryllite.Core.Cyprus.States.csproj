@@ -2,19 +2,21 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>0.5.4</Version>
     <Authors>Bryllite Ltd.</Authors>
-    <Description>application base library for Bryllite.</Description>
+    <Description>Cyprus states library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
     <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
-    <PackageTags>bryllite appbase</PackageTags>
+    <PackageTags>bryllite cyprus states</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bryllite.Utils.NabiLog\Bryllite.Utils.NabiLog.csproj" />
+    <ProjectReference Include="..\..\..\Utils\Bryllite.Utils.NabiLog\Bryllite.Utils.NabiLog.csproj" />
+    <ProjectReference Include="..\..\Bryllite.Core.Accounts\Bryllite.Core.Accounts.csproj" />
+    <ProjectReference Include="..\..\Bryllite.Core.Block\Bryllite.Core.Block.csproj" />
   </ItemGroup>
 
 </Project>

@@ -714,14 +714,14 @@ namespace Bryllite.Rpc.Web4b
 
             try
             {
-                var response = await PostAsync(new JsonRpc.Request("cyprus_exportKey", id, token, nonce.PublicKey.ToString()));
+                var response = await PostAsync(new JsonRpc.Request("cyprus_exportKey", id, token, Hex.ToString(nonce.PublicKey.CompressedKey)));
                 if (!ReferenceEquals(response, null))
                 {
                     if (!response.HasError)
                     {
                         string encrypted = response.Result<string>(0);
                         string openKey = response.Result<string>(1);
-                        string passKey = nonce.CreateSharedKey(openKey);
+                        string passKey = nonce.CreateEcdhKey(openKey);
 
                         // decrypt user key
                         if (Aes256.TryDecrypt(Hex.ToByteArray(passKey), Hex.ToByteArray(encrypted), out var plain))

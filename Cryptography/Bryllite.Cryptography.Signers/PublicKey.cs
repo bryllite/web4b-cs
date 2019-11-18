@@ -115,11 +115,6 @@ namespace Bryllite.Cryptography.Signers
             }
         }
 
-        public static PublicKey FromPrivateKey(byte[] key)
-        {
-            return PrivateKey.TryParse(key, out PrivateKey pk) ? pk.PublicKey : null;
-        }
-
         public override string ToString()
         {
             return Hex.ToString(UncompressedKey);

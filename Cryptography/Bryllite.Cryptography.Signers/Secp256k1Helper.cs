@@ -97,7 +97,7 @@ namespace Bryllite.Cryptography.Signers
                 return secp256k1.Recover(pubKey, signature, messageHash) ? pubKey : null;
         }
 
-        public static byte[] CreateSharedSecretKey(byte[] privateKey, byte[] publicKey)
+        public static byte[] CreateEcdhKey(byte[] privateKey, byte[] publicKey)
         {
             byte[] secretKey = new byte[PRIVATE_KEY_LENGTH];
             lock (secp256k1)

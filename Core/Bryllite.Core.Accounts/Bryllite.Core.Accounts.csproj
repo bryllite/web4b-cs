@@ -2,19 +2,21 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>0.5.4</Version>
     <Authors>Bryllite Ltd.</Authors>
-    <Description>application base library for Bryllite.</Description>
+    <Description>State account library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
     <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
-    <PackageTags>bryllite appbase</PackageTags>
+    <PackageTags>bryllite account</PackageTags>
+    <RootNamespace>Bryllite.Core.Accounts</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bryllite.Utils.NabiLog\Bryllite.Utils.NabiLog.csproj" />
+    <ProjectReference Include="..\..\Utils\Bryllite.Utils.Currency\Bryllite.Utils.Currency.csproj" />
+    <ProjectReference Include="..\..\Utils\Bryllite.Utils.Rlp\Bryllite.Utils.Rlp.csproj" />
   </ItemGroup>
 
 </Project>

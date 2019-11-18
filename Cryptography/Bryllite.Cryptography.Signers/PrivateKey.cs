@@ -118,9 +118,9 @@ namespace Bryllite.Cryptography.Signers
             return new PrivateKey(Key, ChainCode);
         }
 
-        public PrivateKey CreateSharedKey(PublicKey key)
+        public PrivateKey CreateEcdhKey(PublicKey key)
         {
-            return new PrivateKey(Secp256k1Helper.CreateSharedSecretKey(Key, key.Bytes));
+            return new PrivateKey(Secp256k1Helper.CreateEcdhKey(Key, key.Bytes));
         }
 
         public static PrivateKey CreateKey()

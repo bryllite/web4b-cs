@@ -8,7 +8,7 @@ namespace Bryllite
         // bryllite version
         public static readonly int Major = 0;
         public static readonly int Minor = 5;
-        public static readonly int Revision = 3;
+        public static readonly int Revision = 4;
 
         // version string
         public static readonly string Ver;

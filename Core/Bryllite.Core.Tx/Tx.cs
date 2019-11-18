@@ -18,10 +18,10 @@ namespace Bryllite.Core
         public const byte CyprusNet = 0x80;
 
         // cyprus tx opcode
-        public const byte Transfer = 0x00;
-        public const byte Payout = 0x01;
-        public const byte Issue = 0x02;
-        public const byte Burn = 0x03;
+        public const byte Transfer = 0x80;
+        public const byte Payout = 0x81;
+        public const byte Issue = 0x82;
+        public const byte Burn = 0x83;
 
         // network id
         // bryllite.mainnet < 0x80
@@ -124,9 +124,6 @@ namespace Bryllite.Core
         // rlp stream
         public byte[] Rlp => ToRlp();
 
-        // cyprus net opcode
-        public byte Opcode => IsCyprusChain ? (byte)(Chain - CyprusNet) : byte.MaxValue;
-
         // cyprus net?
         public bool IsCyprusChain => Chain >= CyprusNet;
 
@@ -135,9 +132,9 @@ namespace Bryllite.Core
         {
         }
 
-        public Tx(byte opcode)
+        public Tx(byte chain)
         {
-            Chain = (byte)(CyprusNet + opcode);
+            Chain = chain;
         }
 
         protected Tx(byte[] rlp)

@@ -2,19 +2,22 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RootNamespace>Bryllite.Core</RootNamespace>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>0.5.4</Version>
-    <Authors>Bryllite Ltd.</Authors>
-    <Description>application base library for Bryllite.</Description>
+    <Authors>Bryllite. Ltd</Authors>
+    <Description>Block chain library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
     <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
-    <PackageTags>bryllite appbase</PackageTags>
+    <PackageTags>bryllite block chain</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bryllite.Utils.NabiLog\Bryllite.Utils.NabiLog.csproj" />
+    <ProjectReference Include="..\Bryllite.Core.Genesis\Bryllite.Core.Genesis.csproj" />
+    <ProjectReference Include="..\Bryllite.Core.History\Bryllite.Core.History.csproj" />
+    <ProjectReference Include="..\Bryllite.Core.States\Bryllite.Core.States.csproj" />
   </ItemGroup>
 
 </Project>
