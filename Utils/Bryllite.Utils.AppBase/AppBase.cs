@@ -1,4 +1,6 @@
-﻿using Bryllite.Utils.NabiLog;
+﻿using Bryllite.Extensions;
+using Bryllite.Utils.NabiLog;
+using Bryllite.Utils.Ntp;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -15,10 +17,13 @@ namespace Bryllite.Utils.AppBase
     public abstract class AppBase
     {
         // appsettings configuration filename
+        public static readonly string APPSETTINGS_DEV = "appsettings.development.json";
+        
+        // appsettings configuration filename
         public static readonly string APPSETTINGS = "appsettings.json";
 
         // args
-        protected string[] args;
+        protected CommandLineParser args;
 
         // config
         protected readonly JObject config;
@@ -54,28 +59,41 @@ namespace Bryllite.Utils.AppBase
 
         public AppBase(string[] args)
         {
-            this.args = args;
+            this.args = new CommandLineParser(args);
 
-            // load config
-            if (File.Exists(APPSETTINGS))
+#if DEBUG
+            string json = File.Exists(APPSETTINGS_DEV) ? File.ReadAllText(APPSETTINGS_DEV) : File.Exists(APPSETTINGS) ? File.ReadAllText(APPSETTINGS) : null;
+#else
+            string json = File.Exists(APPSETTINGS) ? File.ReadAllText(APPSETTINGS) : null;
+#endif
+            if (!string.IsNullOrEmpty(json))
             {
-                config = JObject.Parse(File.ReadAllText(APPSETTINGS));
-                Console.Title = config.Value<string>("title");
+                // load config
+                config = JObject.Parse(json);
+
+                if (config.ContainsKey("title"))
+                    Console.Title = config.Value<string>("title");
             }
 
             // default commands
-            MapCommandHandler("exit, quit, shutdown", "프로그램을 종료합니다", OnCommandExit);
-            MapCommandHandler("h, help", "도움말을 출력합니다", OnCommandShowHelp);
-            MapCommandHandler("cls", "콘솔 화면의 내용을 모두 지웁니다", OnCommandClearScreen);
-            MapCommandHandler("config", "설정 정보를 출력합니다", OnCommandShowConfig);
+            MapCommandHandler("exit, quit, shutdown", "close application", OnCommandExit);
+            MapCommandHandler("h, help", "show command list", OnCommandShowHelp);
+            MapCommandHandler("cls", "clear screen", OnCommandClearScreen);
+            MapCommandHandler("config", "show config values", OnCommandShowConfig);
+            MapCommandHandler("args", "show command args", OnCommandShowArgs);
+            MapCommandHandler("time", "show current time information", OnCommandShowTime);
+            MapCommandHandler("time.sync", "synchronize time", OnCommandSyncTime);
+
+            // synchronize network time
+            Task.Run(() =>
+            {
+                if (!NetTime.Synchronize())
+                    Log.WriteLine("[", Color.DarkRed, "FAIL", "] NetTime.Synchronize()...");
+            });
         }
 
         public int Run(object context = null)
         {
-            // app initialize
-            if (!OnAppInitialize())
-                return -1;
-
             // ctrl+c
             Console.CancelKeyPress += (sender, e) =>
             {
@@ -83,11 +101,23 @@ namespace Bryllite.Utils.AppBase
                 Stop(1);
             };
 
-            // do command line process
-            OnMain();
+            try
+            {
+                // app initialize
+                if (!OnAppInitialize())
+                    return -1;
 
-            // app cleanup
-            OnAppCleanup();
+                // do command line process
+                OnMain();
+
+                // app cleanup
+                OnAppCleanup();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("Exception! ex=", ex);
+                return -99;
+            }
 
             return exitCode;
         }
@@ -223,6 +253,42 @@ namespace Bryllite.Utils.AppBase
         protected virtual void OnCommandShowConfig(string[] args)
         {
             BConsole.WriteLine(config);
+        }
+
+        protected virtual void OnCommandShowArgs(string[] args)
+        {
+            bool json = args.Length > 0 ? Convert.ToBoolean(args[0]) : false;
+
+            if (json)
+                BConsole.WriteLine(this.args.ToJObject());
+            else BConsole.WriteLine(this.args.ToString());
+        }
+
+        protected virtual void OnCommandShowTime(string[] args)
+        {
+            BConsole.WriteLine("NetTime=", GetNetTime());
+        }
+
+        protected virtual void OnCommandSyncTime(string[] args)
+        {
+            Task.Run(() =>
+            {
+                NetTime.Synchronize();
+                BConsole.WriteLine("NetTime=", GetNetTime());
+            });
+        }
+
+        protected JObject GetNetTime()
+        {
+            var time = new JObject();
+            time.Put("synchronized", NetTime.Synchronized);
+            time.Put("provider", NetTime.ActiveTimeServer);
+            time.Put("utc", NetTime.UtcNow);
+            time.Put("now", DateTime.Now);
+            time.Put("unixtime", NetTime.UnixTime);
+            time.Put("timediff", NetTime.TimeDiff);
+
+            return time;
         }
     }
 }

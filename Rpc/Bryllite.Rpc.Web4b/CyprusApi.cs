@@ -16,161 +16,29 @@ using System.Threading.Tasks;
 
 namespace Bryllite.Rpc.Web4b
 {
-    public class CyprusApi
+    public class CyprusApi : ApiBase
     {
-        public static readonly string EARLIEST = "earliest";
-        public static readonly string LATEST = "latest";
-        public static readonly string PENDING = "pending";
-
-        // api provider
-        private IWeb4bProvider web4b;
-
-        // errors
-        private List<string> errors = new List<string>();
-
-
-        public CyprusApi(IWeb4bProvider web4b)
-        {
-            this.web4b = web4b;
-        }
-
-        public CyprusApi(Uri remote)
-        {
-            if ("http" == remote.Scheme.ToLower())
-                web4b = new HttpProvider(remote);
-            else if ("ws" == remote.Scheme.ToLower())
-                web4b = new WebSocketProvider(remote);
-            else throw new ArgumentException("unsupported uri scheme");
-        }
-
-        public CyprusApi(string remote) : this(new Uri(remote))
+        public CyprusApi(IWeb4bProvider web4b) : base(web4b)
         {
         }
 
-        public string GetLastError()
+        public CyprusApi(Uri remote) : base(remote)
         {
-            lock (errors)
-                return errors.Last();
         }
 
-        public IEnumerable<string> Errors()
+        public CyprusApi(string remote) : base(remote)
         {
-            lock (errors)
-                return errors.ToArray();
-        }
-
-        public void SetLastError(string error)
-        {
-            lock (errors)
-                errors.Add(error);
-        }
-
-
-        // jsonrpc request async
-        public async Task<JsonRpc> PostAsync(JsonRpc request)
-        {
-            return JsonRpc.TryParse(await web4b.PostAsync(request.ToString()), out JsonRpc response) ? response : null;
-        }
-
-        // jsonrpc batch request
-        public async Task<JsonRpc.Batch> PostAsync(JsonRpc.Batch batch)
-        {
-            return JsonRpc.Batch.TryParse(await web4b.PostAsync(batch.ToString()), out JsonRpc.Batch response) ? response : null;
-        }
-
-        public async Task<string> GetVersionAsync(int id = 0)
-        {
-            try
-            {
-                var response = await PostAsync(new JsonRpc.Request("web4b_getVersion", id));
-                if (!ReferenceEquals(response, null))
-                {
-                    if (!response.HasError)
-                        return response.Result<string>(0);
-
-                    SetLastError(response.ErrorMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                SetLastError(ex.ToString());
-            }
-
-            return null;
-        }
-
-        public async Task<long?> GetTimeAsync(int id = 0)
-        {
-            try
-            {
-                var response = await PostAsync(new JsonRpc.Request("web4b_getTime", id));
-                if (!ReferenceEquals(response, null))
-                {
-                    if (!response.HasError)
-                        return Hex.ToNumber<long>(response.Result<string>(0));
-
-                    SetLastError(response.ErrorMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                SetLastError(ex.ToString());
-            }
-
-            return null;
-        }
-
-        public async Task<string> GetSha3Async(string message, int id = 0)
-        {
-            try
-            {
-                var response = await PostAsync(new JsonRpc.Request("web4b_sha3", id, message));
-                if (!ReferenceEquals(response, null))
-                {
-                    if (!response.HasError)
-                        return response.Result<string>(0);
-
-                    SetLastError(response.ErrorMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                SetLastError(ex.ToString());
-            }
-
-            return null;
         }
 
         public async Task<string> GetCoinbaseAsync(int id = 0)
         {
             try
             {
-                var response = await PostAsync(new JsonRpc.Request("web4b_coinbase", id));
+                var response = await PostAsync(new JsonRpc.Request("cyprus_coinbase", id));
                 if (!ReferenceEquals(response, null))
                 {
                     if (!response.HasError)
                         return response.Result<string>(0);
-
-                    SetLastError(response.ErrorMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                SetLastError(ex.ToString());
-            }
-
-            return null;
-        }
-
-        public async Task<bool?> GetMiningAsync(int id = 0)
-        {
-            try
-            {
-                var response = await PostAsync(new JsonRpc.Request("web4b_mining", id));
-                if (!ReferenceEquals(response, null))
-                {
-                    if (!response.HasError)
-                        return response.Result<bool>(0);
 
                     SetLastError(response.ErrorMessage);
                 }
@@ -374,11 +242,37 @@ namespace Bryllite.Rpc.Web4b
             return null;
         }
 
-        public async Task<string> SendRawTransactionAsync(string txRlp, int id = 0)
+        public async Task<Tx> CreateTx(byte opcode, string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null)
         {
             try
             {
-                var response = await PostAsync(new JsonRpc.Request("cyprus_sendRawTransaction", id, txRlp));
+                // nonce?
+                if (null == nonce)
+                    nonce = await GetTransactionCountAsync(new PrivateKey(signer).Address, PENDING);
+
+                // make tx
+                return new Tx()
+                {
+                    Chain = opcode,
+                    To = to,
+                    Value = value,
+                    Gas = gas,
+                    Nonce = nonce.Value
+                }.Sign(signer);
+            }
+            catch (Exception ex)
+            {
+                SetLastError(ex.ToString());
+            }
+
+            return null;
+        }
+
+        public async Task<string> TransferAsync(Tx tx, int id = 0)
+        {
+            try
+            {
+                var response = await PostAsync(new JsonRpc.Request("cyprus_sendTransferTransaction", id, Hex.ToString(tx.Rlp)));
                 if (!ReferenceEquals(response, null))
                 {
                     if (!response.HasError)
@@ -393,28 +287,21 @@ namespace Bryllite.Rpc.Web4b
             }
 
             return null;
+
         }
 
-        public async Task<Tx> CreateTx(byte opcode, string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null)
+        public async Task<string> WithdrawAsync(Tx tx, int id = 0)
         {
             try
             {
-                // signer key
-                PrivateKey key = signer;
-
-                // nonce?
-                if (null == nonce)
-                    nonce = await GetTransactionCountAsync(key.Address, PENDING);
-
-                // make tx
-                return new Tx(opcode)
+                var response = await PostAsync(new JsonRpc.Request("cyprus_sendWithdrawTransaction", id, Hex.ToString(tx.Rlp)));
+                if (!ReferenceEquals(response, null))
                 {
-                    Timestamp = NetTime.UnixTime,
-                    To = to,
-                    Value = value,
-                    Gas = gas,
-                    Nonce = nonce.Value
-                }.Sign(key);
+                    if (!response.HasError)
+                        return response.Result<string>(0);
+
+                    SetLastError(response.ErrorMessage);
+                }
             }
             catch (Exception ex)
             {
@@ -422,12 +309,14 @@ namespace Bryllite.Rpc.Web4b
             }
 
             return null;
+
         }
+
 
         public async Task<string> TransferAsync(string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
         {
             var tx = await CreateTx(Tx.Transfer, signer, to, value, gas, nonce);
-            return !ReferenceEquals(tx, null) ? await SendRawTransactionAsync(Hex.ToString(tx.Rlp), id) : null;
+            return !ReferenceEquals(tx, null) ? await TransferAsync(tx, id) : null;
         }
 
         public async Task<JObject> TransferAndWaitReceiptAsync(CancellationToken cancellation, string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
@@ -461,15 +350,15 @@ namespace Bryllite.Rpc.Web4b
             return await TransferAndWaitReceiptAsync(CancellationToken.None, signer, to, value, gas, nonce, id);
         }
 
-        public async Task<string> PayoutAsync(string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
+        public async Task<string> WithdrawAsync(string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
         {
-            var tx = await CreateTx(Tx.Payout, signer, to, value, gas, nonce);
-            return !ReferenceEquals(tx, null) ? await SendRawTransactionAsync(Hex.ToString(tx.Rlp), id) : null;
+            var tx = await CreateTx(Tx.Withdraw, signer, to, value, gas, nonce);
+            return !ReferenceEquals(tx, null) ? await WithdrawAsync(tx, id) : null;
         }
 
-        public async Task<JObject> PayoutAndWaitReceiptAsync(CancellationToken cancellation, string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
+        public async Task<JObject> WithdrawAndWaitReceiptAsync(CancellationToken cancellation, string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
         {
-            var txid = await PayoutAsync(signer, to, value, gas, nonce, id);
+            var txid = await WithdrawAsync(signer, to, value, gas, nonce, id);
             if (string.IsNullOrEmpty(txid))
                 return null;
 
@@ -493,9 +382,9 @@ namespace Bryllite.Rpc.Web4b
 
         }
 
-        public async Task<JObject> PayoutAndWaitReceiptAsync(string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
+        public async Task<JObject> WithdrawAndWaitReceiptAsync(string signer, string to, ulong value, ulong gas = 0, ulong? nonce = null, int id = 0)
         {
-            return await PayoutAndWaitReceiptAsync(CancellationToken.None, signer, to, value, gas, nonce, id);
+            return await WithdrawAndWaitReceiptAsync(CancellationToken.None, signer, to, value, gas, nonce, id);
         }
 
         public async Task<JArray> GetPendingTransactionsAsync(int id = 0)
@@ -691,7 +580,7 @@ namespace Bryllite.Rpc.Web4b
         {
             try
             {
-                var response = await PostAsync(new JsonRpc.Request("cyprus_exportKeyToken", id, uid, signature));
+                var response = await PostAsync(new JsonRpc.Request("cyprus_getUserKeyExportToken", id, uid, signature));
                 if (!ReferenceEquals(response, null))
                 {
                     if (!response.HasError)
@@ -714,7 +603,7 @@ namespace Bryllite.Rpc.Web4b
 
             try
             {
-                var response = await PostAsync(new JsonRpc.Request("cyprus_exportKey", id, token, Hex.ToString(nonce.PublicKey.CompressedKey)));
+                var response = await PostAsync(new JsonRpc.Request("cyprus_getUserKey", id, token, Hex.ToString(nonce.PublicKey.CompressedKey)));
                 if (!ReferenceEquals(response, null))
                 {
                     if (!response.HasError)

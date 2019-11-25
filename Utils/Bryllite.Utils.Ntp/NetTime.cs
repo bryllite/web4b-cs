@@ -74,9 +74,8 @@ namespace Bryllite.Utils.Ntp
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Log.Warning("exception! e.Message=", e.Message);
                 }
             }
 

@@ -135,7 +135,7 @@ namespace Bryllite.Utils.Rlp
             else if (item is decimal dec) return EncodeItem(dec.ToByteArray(true));
             // byte[], string, hex
             else if (item is byte[] bytes) return EncodeItem(bytes);
-            else if (item is string str) return EncodeItem(System.Text.Encoding.UTF8.GetBytes(str));
+            else if (item is string str) return EncodeItem(Encoding.UTF8.GetBytes(str));
             else if (item is Hex hex) return EncodeItem(hex);
             // list
             else if (item is IEnumerable enumerable)

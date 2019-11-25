@@ -23,6 +23,9 @@ namespace Bryllite.Database.TrieDB
         private Options options;
         private Encoding encoding;
 
+        // db path
+        public string Path => path;
+
         public IEnumerable<byte[]> Keys
         {
             get
@@ -158,6 +161,16 @@ namespace Bryllite.Database.TrieDB
         public bool Has(byte[] key)
         {
             return !ReferenceEquals(Get(key), null);
+        }
+
+        public bool Repair()
+        {
+            return !Running ? Repair(path) : false;
+        }
+
+        public bool Destroy()
+        {
+            return !Running ? Destroy(path) : false;
         }
 
         public static bool Destroy(string path)

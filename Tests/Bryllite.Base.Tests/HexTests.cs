@@ -308,32 +308,6 @@ namespace Bryllite.Base.Tests
         }
 
 
-        public int HexStringCompare(string left, string right)
-        {
-            string InvalidHexExp = @"[^\dabcdef]";
-            string HexPaddingExp = @"^(0x)?0*";
-            //Remove whitespace, "0x" prefix if present, and leading zeros.  
-            //Also make all characters lower case.
-            string l = Regex.Replace(left.Trim().ToLower(), HexPaddingExp, "");
-            string r = Regex.Replace(right.Trim().ToLower(), HexPaddingExp, "");
-
-            //validate that values contain only hex characters
-            if (Regex.IsMatch(l, InvalidHexExp))
-            {
-                throw new ArgumentOutOfRangeException("Value1 is not a hex string");
-            }
-            if (Regex.IsMatch(r, InvalidHexExp))
-            {
-                throw new ArgumentOutOfRangeException("Value2 is not a hex string");
-            }
-
-            int Result = l.Length.CompareTo(r.Length);
-            if (Result == 0)
-                Result = l.CompareTo(r);
-
-            return Result;
-        }
-
         [Fact]
         public void Check()
         {

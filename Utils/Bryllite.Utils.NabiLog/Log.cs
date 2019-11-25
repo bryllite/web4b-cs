@@ -236,7 +236,6 @@ namespace Bryllite.Utils.NabiLog
             lock (Lock)
             {
                 WriteTime();
-                WriteType(VERB, Color.Cyan);
                 Write(args); Write(EOL);
             }
         }
@@ -248,7 +247,6 @@ namespace Bryllite.Utils.NabiLog
             lock (Lock)
             {
                 WriteTime();
-                WriteType(INFO, Color.DarkCyan);
                 Write(args); Write(EOL);
             }
         }

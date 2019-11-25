@@ -111,16 +111,10 @@ namespace Bryllite.Utils.NabiLog
             return Console.ReadLine();
         }
 
-        public static string ReadPassword()
-        {
-            return ReadPassword("password: ");
-        }
-
-        public static string ReadPassword(string prompts)
+        public static string ReadPassword(params object[] prompts)
         {
             // write prompts
-            if (!string.IsNullOrEmpty(prompts))
-                Write(prompts);
+            Write(prompts);
 
             string password = string.Empty;
             while (true)

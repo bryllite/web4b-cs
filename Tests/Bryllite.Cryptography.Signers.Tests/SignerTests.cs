@@ -108,11 +108,12 @@ namespace Bryllite.Cryptography.Signers.Tests
                 string aa = a.PublicKey;
                 string bb = b.PublicKey;
 
-                var expected = a.CreateSharedKey(bb);
-                var actual = b.CreateSharedKey(aa);
+                var expected = a.CreateEcdhKey(bb);
+                var actual = b.CreateEcdhKey(aa);
 
                 Assert.Equal(expected, actual);
             }
         }
+
     }
 }

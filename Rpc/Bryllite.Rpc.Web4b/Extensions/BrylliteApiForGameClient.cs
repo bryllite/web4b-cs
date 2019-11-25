@@ -32,7 +32,7 @@ namespace Bryllite.Rpc.Web4b.Extensions
             this.uid = uid;
             this.address = address;
 
-            PoA.Start(address);
+            PoA.Start(uid, address);
         }
 
         // stop poa service

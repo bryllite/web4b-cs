@@ -56,7 +56,7 @@ namespace Bryllite.Cryptography.Signers
             try
             {
                 address = Parse(bytes);
-                return true;
+                return !ReferenceEquals(address, null);
             }
             catch
             {
@@ -70,7 +70,7 @@ namespace Bryllite.Cryptography.Signers
             try
             {
                 address = Parse(hex);
-                return true;
+                return !ReferenceEquals(address, null);
             }
             catch
             {

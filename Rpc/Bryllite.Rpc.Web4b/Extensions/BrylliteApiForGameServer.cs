@@ -5,6 +5,7 @@ using Bryllite.Utils.Auth;
 using Bryllite.Utils.Currency;
 using Bryllite.Utils.JsonRpc;
 using Bryllite.Utils.NabiLog;
+using Bryllite.Utils.Ntp;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -92,8 +93,10 @@ namespace Bryllite.Rpc.Web4b.Extensions
         {
             try
             {
-                string signature = gamekey.Sign(Hex.ToByteArray(seed));
-                JsonRpc response = await Cyprus.PostAsync(new JsonRpc.Request("poa.seed", 0, seed, signature));
+                string timestamp = Hex.ToString(NetTime.UnixTime, true);
+                byte[] messageHash = Hex.ToByteArray(timestamp).Hash256();
+                string signature = gamekey.Sign(messageHash);
+                JsonRpc response = await Cyprus.PostAsync(new JsonRpc.Request("cyprus_getPoATokenSeed", 0, timestamp, signature));
                 seed = response.Result<string>(0);
             }
             catch (Exception ex)
@@ -145,11 +148,11 @@ namespace Bryllite.Rpc.Web4b.Extensions
         }
 
         // Ex-Game Tx
-        public async Task<string> PayoutAsync(string signer, string to, decimal value, decimal gas = 0, ulong? nonce = null)
+        public async Task<string> WithdrawAsync(string signer, string to, decimal value, decimal gas = 0, ulong? nonce = null)
         {
             try
             {
-                return await Cyprus.PayoutAsync(signer, to, ToBeryl(value), ToBeryl(gas), nonce);
+                return await Cyprus.WithdrawAsync(signer, to, ToBeryl(value), ToBeryl(gas), nonce);
             }
             catch (Exception ex)
             {

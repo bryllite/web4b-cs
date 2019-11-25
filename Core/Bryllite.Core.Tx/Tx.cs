@@ -19,9 +19,8 @@ namespace Bryllite.Core
 
         // cyprus tx opcode
         public const byte Transfer = 0x80;
-        public const byte Payout = 0x81;
-        public const byte Issue = 0x82;
-        public const byte Burn = 0x83;
+        public const byte Withdraw = 0x81;
+        public const byte Deposit = 0x82;
 
         // network id
         // bryllite.mainnet < 0x80
@@ -39,14 +38,6 @@ namespace Bryllite.Core
         {
             get { return version; }
             set { version = value; }
-        }
-
-        // timestamp
-        protected Hex timestamp;
-        public int Timestamp
-        {
-            get { return timestamp; }
-            set { timestamp = value; }
         }
 
         // recipient address
@@ -85,15 +76,15 @@ namespace Bryllite.Core
         protected Hex data = null;
         public byte[] Data
         {
-            get { return data ?? null; }
+            get { return data; }
             set { data = value; }
         }
 
-        // extra data ( for cyprus, etcs, ... )
+        // extra data 
         protected Hex extra = null;
         public byte[] Extra
         {
-            get { return extra ?? null; }
+            get { return extra; }
             set { extra = value; }
         }
 
@@ -108,6 +99,14 @@ namespace Bryllite.Core
         public byte[] R => Seal.R;
         public byte[] S => Seal.S;
         public byte V => Seal.V;
+
+        // meta data ( not affected to txid, hash )
+        protected Hex metadata = null;
+        public byte[] Metadata
+        {
+            get { return metadata; }
+            set { metadata = value; }
+        }
 
         // txid
         public H256 Txid => ToTxid();
@@ -132,18 +131,12 @@ namespace Bryllite.Core
         {
         }
 
-        public Tx(byte chain)
-        {
-            Chain = chain;
-        }
-
         protected Tx(byte[] rlp)
         {
             var decoder = new RlpDecoder(rlp);
 
             chain = decoder.Next();
             version = decoder.Next();
-            timestamp = decoder.Next();
             to = decoder.Next();
             value = decoder.Next();
             gas = decoder.Next();
@@ -153,6 +146,9 @@ namespace Bryllite.Core
 
             // signature rsv
             seal = decoder.Next();
+
+            // metadata
+            metadata = decoder.Next();
         }
 
         protected Tx(string rlp) : this(Hex.ToByteArray(rlp))
@@ -161,17 +157,17 @@ namespace Bryllite.Core
 
         protected virtual H256 ToHash()
         {
-            return RlpEncoder.EncodeList(chain, version, timestamp, to, value, gas, nonce, data, extra).Hash256();
+            return RlpEncoder.EncodeList(chain, version, to, value, gas, nonce, data, extra).Hash256();
         }
 
         protected virtual byte[] ToRlp()
         {
-            return RlpEncoder.EncodeList(chain, version, timestamp, to, value, gas, nonce, data, extra, seal);
+            return RlpEncoder.EncodeList(chain, version, to, value, gas, nonce, data, extra, seal, metadata);
         }
 
         protected virtual H256 ToTxid()
         {
-            return ToRlp().Hash256();
+            return RlpEncoder.EncodeList(chain, version, to, value, gas, nonce, data, extra, seal).Hash256();
         }
 
         public JObject ToJObject()
@@ -181,7 +177,6 @@ namespace Bryllite.Core
             json.Put("hash", Txid);
             json.Put("chain", Hex.ToString(Chain, true));
             json.Put("version", Hex.ToString(Version, true));
-            json.Put("timestamp", Hex.ToString(Timestamp, true));
             json.Put<string>("from", From);
             json.Put<string>("to", To);
             json.Put("value", Hex.ToString(Value, true));
@@ -189,6 +184,7 @@ namespace Bryllite.Core
             json.Put("nonce", Hex.ToString(Nonce, true));
             json.Put("input", Hex.ToString(Data));
             json.Put("extra", Hex.ToString(Extra));
+            json.Put("metadata", Hex.ToString(Metadata));
             json.Put("v", Hex.ToString(V));
             json.Put("r", Hex.ToString(R));
             json.Put("s", Hex.ToString(S));
@@ -272,7 +268,7 @@ namespace Bryllite.Core
             try
             {
                 tx = Parse(rlp);
-                return true;
+                return !ReferenceEquals(tx, null);
             }
             catch
             {

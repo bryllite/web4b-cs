@@ -92,7 +92,7 @@ namespace Bryllite.Cryptography.Signers
             try
             {
                 signature = Parse(bytes);
-                return true;
+                return !ReferenceEquals(signature, null);
             }
             catch (Exception)
             {
@@ -106,7 +106,7 @@ namespace Bryllite.Cryptography.Signers
             try
             {
                 signature = Parse(hex);
-                return true;
+                return !ReferenceEquals(signature, null);
             }
             catch (Exception)
             {

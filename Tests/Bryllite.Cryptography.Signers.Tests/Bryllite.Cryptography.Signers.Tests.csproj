@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Cryptography\Bryllite.Cryptography.Aes\Bryllite.Cryptography.Aes.csproj" />
     <ProjectReference Include="..\..\Cryptography\Bryllite.Cryptography.Signers\Bryllite.Cryptography.Signers.csproj" />
   </ItemGroup>
 

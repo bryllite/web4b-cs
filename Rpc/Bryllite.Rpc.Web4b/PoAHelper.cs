@@ -24,6 +24,9 @@ namespace Bryllite.Rpc.Web4b
         // websocket connection
         private WebSocketProvider connection;
 
+        // user id
+        private string uid;
+
         // user address
         private string address;
         public string Address => address;
@@ -49,16 +52,17 @@ namespace Bryllite.Rpc.Web4b
             connection.Dispose();
         }
 
-        public void Start(string address, CancellationToken cancellation)
+        public void Start(string uid, string address, CancellationToken cancellation)
         {
+            this.uid = uid;
             this.address = address;
 
             connection.Run(cancellation);
         }
 
-        public void Start(string address)
+        public void Start(string uid, string address)
         {
-            Start(address, CancellationToken.None);
+            Start(uid, address, CancellationToken.None);
         }
 
         public void Stop()
@@ -105,7 +109,7 @@ namespace Bryllite.Rpc.Web4b
             // request for accessToken
             string accessToken = await callback?.Invoke(hash, iv);
             if (!string.IsNullOrEmpty(accessToken))
-                await connection.SendAsync(new JsonRpc.Notification(POA_RESPONSE, address, accessToken).ToString(), CancellationToken.None);
+                await connection.SendAsync(new JsonRpc.Notification(POA_RESPONSE, uid, address, accessToken).ToString(), CancellationToken.None);
         }
 
     }

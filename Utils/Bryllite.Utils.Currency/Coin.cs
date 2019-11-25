@@ -33,6 +33,8 @@ namespace Bryllite.Utils.Currency
         public static readonly int PRECISION = 8;
         public static readonly int BLOCK_REWARD = 100;
         public static readonly long HALVING_BLOCK = 1051200;
+        public static readonly int BONUS_BLOCK = 360;
+        public static readonly decimal BONUS_RATE = 12.5m;
 
         // beryl per 1 coin
         public static readonly decimal DECIMALS = new decimal(Math.Pow(10, PRECISION));
@@ -56,6 +58,15 @@ namespace Bryllite.Utils.Currency
 
             decimal halved = (BLOCK_REWARD / 10) * Math.Min(9, number / HALVING_BLOCK);
             return ToBeryl(BLOCK_REWARD - halved);
+        }
+
+        // 블록 넘버에 해당하는 블록 보너스를 구한다.
+        public static ulong GetBlockBonus(long number)
+        {
+            Guard.Assert(number > 0);
+            if (number % BONUS_BLOCK != 0) return 0;
+
+            return (ulong)(GetBlockReward(number) * BONUS_RATE);
         }
 
         // decimal은 눈으로 보여지는 단위( 예: 10.15 BRC, 0.001 BRC )
