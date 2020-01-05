@@ -7,8 +7,8 @@ web4b is designed based on the `Ethereum API` for easy use by developers who hav
 web4b API package is provided to partner developers by NuGet. ([bryllite-packages](https://www.nuget.org/profiles/bryllite))  
 
 web4b Endpoint API:
-* [JsonRpc.Be4](https://github.com/bryllite/web4b-cs/wiki/JsonRpc.Be4)  
-* [JsonRpc.Cyprus](https://github.com/bryllite/web4b-cs/wiki/JsonRpc.Cyprus)  
+* [JsonRpc.Be4](https://github.com/bryllite/web4b-cs/wiki/JsonRpc.Web4b#be4-api-15)  
+* [JsonRpc.Cyprus](https://github.com/bryllite/web4b-cs/wiki/JsonRpc.Web4b#cyprus-api-19)  
 
 web4b samples:
 * [web4b-cs-samples](https://github.com/bryllite/web4b-cs-samples)
