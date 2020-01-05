@@ -7,7 +7,7 @@ namespace Bryllite.Database.TrieDB
     /// trie db
     /// key / value db
     /// </summary>
-    public interface ITrieDB : IDisposable, IEnumerable<KeyValuePair<byte[], byte[]>>
+    public interface ITrieDB : IDisposable
     {
         IEnumerable<byte[]> Keys { get; }
         IEnumerable<byte[]> Values { get; }
@@ -32,6 +32,9 @@ namespace Bryllite.Database.TrieDB
 
         // has key?
         bool Has(byte[] key);
+
+        // as enumerable
+        IEnumerable<KeyValuePair<byte[], byte[]>> AsEnumerable();
 
     }
 }

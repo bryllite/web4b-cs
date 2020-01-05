@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Rpc\Bryllite.Rpc.Web4b\Bryllite.Rpc.Web4b.csproj" />
+    <ProjectReference Include="..\..\Rpc\Bryllite.Rpc.Web4b.Be4\Bryllite.Rpc.Web4b.Be4.csproj" />
+    <ProjectReference Include="..\..\Rpc\Bryllite.Rpc.Web4b.Cyprus\Bryllite.Rpc.Web4b.Cyprus.csproj" />
+    <ProjectReference Include="..\..\Rpc\Bryllite.Rpc.Web4b.PoA\Bryllite.Rpc.Web4b.PoA.csproj" />
     <ProjectReference Include="..\..\Utils\Bryllite.Utils.Currency\Bryllite.Utils.Currency.csproj" />
   </ItemGroup>
 

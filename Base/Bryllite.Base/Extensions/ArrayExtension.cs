@@ -39,9 +39,9 @@ namespace Bryllite.Extensions
         /// <typeparam name="T"></typeparam>
         /// <param name="array"></param>
         /// <returns></returns>
-        public static T[] Shuffle<T>(this T[] array)
+        public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> enums)
         {
-            return IsNullOrEmpty(array) ? array : array.OrderBy(x => SecureRandom.Next<int>()).ToArray();
+            return IsNullOrEmpty(enums) ? enums : enums.OrderBy(x => SecureRandom.Next<int>()).ToArray();
         }
 
         /// <summary>

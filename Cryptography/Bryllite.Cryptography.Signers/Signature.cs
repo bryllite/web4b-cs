@@ -8,83 +8,53 @@ using Bryllite.Extensions;
 namespace Bryllite.Cryptography.Signers
 {
     /// <summary>
-    /// R, S, V 를 모두 포함하는 65바이트 크기의 서명 정보
+    /// ECDH signature with R, S, V
     /// </summary>
-    public class Signature
+    public class Signature : Hex
     {
-        public static readonly int BYTE_LENGTH = 1 + Secp256k1Helper.SIGNATURE_LENGTH;
-        public static readonly Signature Null = null;
+        // signature length
+        public const int LENGTH = 1 + Secp256k1Helper.SIGNATURE_LENGTH;
 
-        public byte[] Bytes { get; private set; }
-
-        public string Hex => Bytes.ToHexString();
-
+        // R
         public byte[] R
         {
-            get
-            {
-                return Bytes.Take(32).Reverse().ToArray();
-            }
+            get { return Value.Take(32).Reverse().ToArray(); }
         }
 
+        // S
         public byte[] S
         {
-            get
-            {
-                return Bytes.Skip(32).Take(32).Reverse().ToArray();
-            }
+            get { return Value.Skip(32).Take(32).Reverse().ToArray(); }
         }
 
-        public byte V
+        // V
+        public byte V => Value.Last();
+
+
+        public Signature(Hex hex) : base(hex)
         {
-            get
-            {
-                return Bytes.Last();
-            }
+            Guard.Assert(Length == LENGTH, "wrong bytes length");
         }
 
-        protected Signature()
-        {
-        }
-
-        public Signature(byte[] bytes)
-        {
-            Guard.Assert(bytes.Length == BYTE_LENGTH);
-            Bytes = bytes.ToArray();
-        }
-
-        public Signature(byte[] r, byte[] s, byte v) : this(r.Append(s).Append(v))
-        {
-        }
-
-        public Signature(string hex) : this(hex.ToByteArray())
-        {
-        }
-
-        public Signature(Signature other) : this(other.Bytes)
+        public Signature(byte[] r, byte[] s, byte v) : this(r.Reverse().Concat(s.Reverse()).Concat(new byte[] { v }).ToArray())
         {
         }
 
         public PublicKey GetPublicKey(byte[] messageHash)
         {
-            Guard.Assert(!messageHash.IsNullOrEmpty() && messageHash.Length == 32, "messageHash.length should be 32");
-            return PublicKey.TryParse(Secp256k1Helper.Recover(Bytes, messageHash), out PublicKey key) ? key : null;
+            Guard.Assert(messageHash.Length == 32, "messageHash.length should be 32");
+            return PublicKey.TryParse(Secp256k1Helper.Recover(Value, messageHash), out PublicKey key) ? key : null;
         }
 
 
-        public byte[] ToByteArray()
+        public static new Signature Parse(byte[] bytes)
         {
-            return Bytes;
+            return new Signature(bytes);
         }
 
-        public static Signature Parse(byte[] bytes)
+        public static new Signature Parse(string hex)
         {
-            return !bytes.IsNullOrEmpty() ? new Signature(bytes) : Null;
-        }
-
-        public static Signature Parse(string hex)
-        {
-            return Parse(hex.ToByteArray());
+            return new Signature(hex);
         }
 
         public static bool TryParse(byte[] bytes, out Signature signature)
@@ -96,7 +66,7 @@ namespace Bryllite.Cryptography.Signers
             }
             catch (Exception)
             {
-                signature = Null;
+                signature = null;
                 return false;
             }
         }
@@ -115,41 +85,15 @@ namespace Bryllite.Cryptography.Signers
             }
         }
 
-        public override string ToString()
-        {
-            return Hex;
-        }
-
-        public override int GetHashCode()
-        {
-            return new BigInteger(Bytes).GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            var o = obj as Signature;
-            return !ReferenceEquals(o, null) && Bytes.SequenceEqual(o.Bytes);
-        }
-
-        public static bool operator ==(Signature left, Signature right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (ReferenceEquals(left, null)) return false;
-            return left.Equals(right);
-        }
-        public static bool operator !=(Signature left, Signature right)
-        {
-            return !(left == right);
-        }
 
         public static implicit operator byte[] (Signature signature)
         {
-            return signature?.Bytes;
+            return signature?.Value;
         }
 
         public static implicit operator string(Signature signature)
         {
-            return signature?.Hex;
+            return signature?.ToString();
         }
 
         public static implicit operator Signature(byte[] bytes)

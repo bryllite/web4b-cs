@@ -1,21 +1,20 @@
-﻿using Bryllite.Cryptography.Signers;
-using Bryllite.Extensions;
+﻿using Bryllite.Rpc.Web4b.Cyprus;
 using Bryllite.Rpc.Web4b.Providers;
 using Bryllite.Utils.JsonRpc;
 using Bryllite.Utils.NabiLog;
+using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Bryllite.Rpc.Web4b
+namespace Bryllite.Rpc.Web4b.PoA
 {
     public class PoAHelper : IDisposable
     {
         public const string POA_REQUEST = "poa_request_subscription";
         public const string POA_RESPONSE = "poa_response";
+        public const string POA_RESULT = "poa_result";
 
         // accessToken callback handler
         public delegate Task<string> CallbackHandler(string hash, string iv);
@@ -23,6 +22,9 @@ namespace Bryllite.Rpc.Web4b
 
         // websocket connection
         private WebSocketProvider connection;
+
+        // cyprus helper
+        public CyprusHelper Cyprus;
 
         // user id
         private string uid;
@@ -34,17 +36,21 @@ namespace Bryllite.Rpc.Web4b
         // is connected?
         public bool Connected => connection.Connected;
 
-        public PoAHelper(string remote, CallbackHandler callback)
+        public PoAHelper(string endpointPoA, CallbackHandler callback, string endpointCyprus = null)
         {
             this.callback = callback;
 
             // websocket connection
-            connection = new WebSocketProvider(remote)
+            connection = new WebSocketProvider(endpointPoA)
             {
                 OnConnected = OnConnected,
                 OnDisconnected = OnDisconnected,
                 OnReceived = OnMessage
             };
+
+            // cyprus helper
+            if (!string.IsNullOrEmpty(endpointCyprus))
+                Cyprus = new CyprusHelper(endpointCyprus);
         }
 
         public void Dispose()
@@ -85,13 +91,13 @@ namespace Bryllite.Rpc.Web4b
         // 메세지 수신
         private void OnMessage(string message)
         {
-            Task task = null;
             try
             {
                 var request = JsonRpc.Parse(message);
                 switch (request.Method)
                 {
-                    case POA_REQUEST: task = OnMessagePoARequest(request); return;
+                    case POA_REQUEST: OnMessagePoARequest(request); return;
+                    case POA_RESULT: OnMessagePoAResult(request); return;
                     default: break;
                 }
             }
@@ -101,15 +107,42 @@ namespace Bryllite.Rpc.Web4b
             }
         }
 
-        private async Task OnMessagePoARequest(JsonRpc request)
+        private void OnMessagePoARequest(JsonRpc request)
         {
-            string hash = request.Params<string>(0);
-            string iv = request.Params<string>(1);
+            Task.Run(async () =>
+            {
+                string hash = request.Params<string>(0);
+                string iv = request.Params<string>(1);
 
-            // request for accessToken
-            string accessToken = await callback?.Invoke(hash, iv);
-            if (!string.IsNullOrEmpty(accessToken))
-                await connection.SendAsync(new JsonRpc.Notification(POA_RESPONSE, uid, address, accessToken).ToString(), CancellationToken.None);
+                // request for accessToken
+                string accessToken = await callback?.Invoke(hash, iv);
+                if (!string.IsNullOrEmpty(accessToken))
+                    await connection.SendAsync(new JsonRpc.Notification(POA_RESPONSE, uid, address, accessToken).ToString(), CancellationToken.None);
+            });
+        }
+
+        private void OnMessagePoAResult(JsonRpc request)
+        {
+            string error = request.Params<string>(0);
+            if (!string.IsNullOrEmpty(error))
+                Log.Warning("PoA.ErrorMessage=", error);
+        }
+
+
+        public async Task<(ulong? balance, string error)> GetBalanceAsync(string arg = CyprusHelper.PENDING, int id = 0)
+        {
+            if (ReferenceEquals(Cyprus, null))
+                return (null, "cyprus provider not exists");
+
+            return await Cyprus.GetBalanceAsync(address, arg, id);
+        }
+
+        public async Task<(JArray txs, string error)> GetTransactionHistoryAsync(long start, bool desc, int max, int id = 0)
+        {
+            if (ReferenceEquals(Cyprus, null))
+                return (null, "cyprus provider not exists");
+
+            return await Cyprus.GetTransactionsByAddressAsync(address, start, desc, max, id);
         }
 
     }

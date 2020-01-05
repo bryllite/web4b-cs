@@ -78,12 +78,12 @@ namespace Bryllite.Utils.Pbkdf
 
         public static string EncryptKeyStoreV3(PrivateKey key, string password, ScryptParams kdfParams)
         {
-            return EncryptKey(key.ToByteArray(), key.Address.Hex, password, kdfParams).ToJson();
+            return EncryptKey(key.ToByteArray(), key.Address, password, kdfParams).ToJson();
         }
 
         public static string EncryptKeyStoreV3(PrivateKey key, string password, Pbkdf2Params kdfParams)
         {
-            return EncryptKey(key.ToByteArray(), key.Address.Hex, password, kdfParams).ToJson();
+            return EncryptKey(key.ToByteArray(), key.Address, password, kdfParams).ToJson();
         }
 
 

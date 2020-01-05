@@ -11,6 +11,7 @@ namespace Bryllite
     // byte[] class for convert hex string, byte[], numbers
     public class Hex : ICloneable, IComparable, IComparable<Hex>, IEnumerable, IEnumerable<byte>
     {
+        public const string ELLIPSIS = "…";
         public static readonly Hex Null = null;
         public static readonly Hex Empty = new Hex(0);
         public static readonly Hex Zero = new Hex(1);
@@ -46,6 +47,9 @@ namespace Bryllite
         // indexer
         public byte this[int idx] => value[idx];
 
+        protected Hex()
+        {
+        }
 
         protected Hex(int bytesLength)
         {
@@ -61,6 +65,10 @@ namespace Bryllite
         {
         }
 
+        protected Hex(Hex hex) : this(hex.Value)
+        {
+        }
+
         // hex string
         public override string ToString()
         {
@@ -70,6 +78,27 @@ namespace Bryllite
         public string ToString(bool trim)
         {
             return ToString(value, trim);
+        }
+
+        // ellipsis hex string
+        public static string Ellipsis(Hex hex, int length = 8)
+        {
+            try
+            {
+                if (hex.Length <= length) return hex.ToString();
+
+                int view = length / 2;
+                byte[] value = hex.Value;
+
+                byte[] front = value.Take(view).ToArray();
+                byte[] end = value.Skip(value.Length - view).ToArray();
+
+                return Prefix + StripPrefix(ToString(front)) + ELLIPSIS + StripPrefix(ToString(end));
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         // to byte array
@@ -100,9 +129,15 @@ namespace Bryllite
             return Clone();
         }
 
+
+        public static int GetHashCode(Hex hex)
+        {
+            return ReferenceEquals(hex, null) || hex.Length == 0 ? int.MinValue : new BigInteger(hex.Value).GetHashCode();
+        }
+
         public override int GetHashCode()
         {
-            return new BigInteger(value).GetHashCode();
+            return GetHashCode(this);
         }
 
         /// <summary>
@@ -440,7 +475,6 @@ namespace Bryllite
         {
             return ToNumber<T>(ToByteArray(hex));
         }
-
 
         public static Hex Parse(byte[] bytes)
         {

@@ -1,6 +1,8 @@
 ﻿using Bryllite.Utils.NabiLog;
 using System;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Bryllite.Utils.Ntp
 {
@@ -35,13 +37,14 @@ namespace Bryllite.Utils.Ntp
         public static DateTime Now => Synchronized ? DateTime.Now + TimeDiff : DateTime.Now;
 
         // seconds from 1970-01-01 00:00:00 
-        public static int UnixTime => (int)(UtcNow - EpochTime).TotalSeconds;
+        public static int UnixTime => (int)((UtcNow - EpochTime).TotalSeconds);
 
+        // timestamp
         // milliseconds from 1970-01-01 00:00:00.000 
-        public static long UnixTimeInMs => (long)(UtcNow - EpochTime).TotalMilliseconds;
+        public static long Timestamp => (long)((UtcNow - EpochTime).TotalMilliseconds);
 
         // unix time to date time
-        public static DateTime FromUnixTime(uint unixTime)
+        public static DateTime FromUnixTime(int unixTime)
         {
             return EpochTime.AddSeconds(unixTime);
         }
@@ -80,6 +83,28 @@ namespace Bryllite.Utils.Ntp
             }
 
             return false;
+        }
+
+        public static async Task Sleep(int ms, CancellationToken cancellation)
+        {
+            await Task.Delay(ms, cancellation);
+        }
+
+        public static async Task Sleep(int ms)
+        {
+            await Sleep(ms, CancellationToken.None);
+        }
+
+        public static async Task SleepTo(long timestamp, CancellationToken cancellation)
+        {
+            while (Timestamp <= timestamp)
+                await Task.Delay(10, cancellation);
+        }
+
+
+        public static async Task SleepTo(long timestamp)
+        {
+            await SleepTo(timestamp, CancellationToken.None);
         }
     }
 }

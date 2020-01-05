@@ -3,9 +3,12 @@ using Bryllite.Utils.NabiLog;
 using Bryllite.Utils.Ntp;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,17 +19,25 @@ namespace Bryllite.Utils.AppBase
 
     public abstract class AppBase
     {
+        public static readonly string TITLE = "Title";
+
         // appsettings configuration filename
-        public static readonly string APPSETTINGS_DEV = "appsettings.development.json";
+        public static readonly string APPSETTINGS_DEV = "config/appsettings.development.json";
         
         // appsettings configuration filename
-        public static readonly string APPSETTINGS = "appsettings.json";
+        public static readonly string APPSETTINGS = "config/appsettings.json";
 
         // args
         protected CommandLineParser args;
+        public CommandLineParser Args => args;
 
         // config
         protected readonly JObject config;
+        public JObject Config => config;
+
+        // environment variables
+        protected readonly JObject env;
+        public JObject Env => env;
 
         // cancellation token
         protected CancellationTokenSource cts = new CancellationTokenSource();
@@ -34,8 +45,12 @@ namespace Bryllite.Utils.AppBase
         // app exit code
         protected int exitCode = 0;
 
+        // console enabled?
+        public bool console;
+
         // command seperators
-        protected static readonly char[] seperators = { ' ', '(', ')', '[', ']', '=', ',', ';', ':', '\'', '\"' };
+        //protected static readonly char[] seperators = { ' ', '(', ')', '[', ']', '=', ',', ';', ':', '\'', '\"' };
+        protected static readonly char[] seperators = { ' ', '(', ')', '[', ']', ',', '\'', '\"' };
 
         public string Prompts = "> ";
         public Color PromptsTextColor = Color.DarkGray;
@@ -57,30 +72,43 @@ namespace Bryllite.Utils.AppBase
         // max commands length to decide desc pos
         private int maxCommandsLength = 0;
 
-        public AppBase(string[] args)
+        public AppBase(string[] arguments)
         {
-            this.args = new CommandLineParser(args);
+            // command line
+            args = new CommandLineParser(arguments);
 
+            // console enabled?
+            console = args.Contains("console");
+
+            // configuration
 #if DEBUG
-            string json = File.Exists(APPSETTINGS_DEV) ? File.ReadAllText(APPSETTINGS_DEV) : File.Exists(APPSETTINGS) ? File.ReadAllText(APPSETTINGS) : null;
+            string cfg = args.Value("config", File.Exists(APPSETTINGS_DEV) ? APPSETTINGS_DEV : APPSETTINGS);
 #else
-            string json = File.Exists(APPSETTINGS) ? File.ReadAllText(APPSETTINGS) : null;
+            string cfg = args.Value("config", APPSETTINGS);
 #endif
-            if (!string.IsNullOrEmpty(json))
+
+            if (File.Exists(cfg))
             {
                 // load config
-                config = JObject.Parse(json);
+                config = JObject.Parse(File.ReadAllText(cfg));
 
-                if (config.ContainsKey("title"))
-                    Console.Title = config.Value<string>("title");
+                // set title
+                string title = config.GetValue("title", StringComparison.OrdinalIgnoreCase)?.Value<string>();
+                Console.Title = !string.IsNullOrEmpty(title) ? title : Assembly.GetEntryAssembly().GetName().Name;
             }
+
+            // environment variables
+            env = new JObject();
+            foreach (DictionaryEntry kv in Environment.GetEnvironmentVariables())
+                env.Add(kv.Key.ToString(), kv.Value.ToString());
 
             // default commands
             MapCommandHandler("exit, quit, shutdown", "close application", OnCommandExit);
             MapCommandHandler("h, help", "show command list", OnCommandShowHelp);
             MapCommandHandler("cls", "clear screen", OnCommandClearScreen);
             MapCommandHandler("config", "show config values", OnCommandShowConfig);
-            MapCommandHandler("args", "show command args", OnCommandShowArgs);
+            MapCommandHandler("env", "show environment values", OnCommandShowEnv);
+            MapCommandHandler("args", "show command line args", OnCommandShowArgs);
             MapCommandHandler("time", "show current time information", OnCommandShowTime);
             MapCommandHandler("time.sync", "synchronize time", OnCommandSyncTime);
 
@@ -94,6 +122,8 @@ namespace Bryllite.Utils.AppBase
 
         public int Run(object context = null)
         {
+            Log.Info("Hello, ", Assembly.GetEntryAssembly().GetName().Name, "!");
+
             // ctrl+c
             Console.CancelKeyPress += (sender, e) =>
             {
@@ -103,23 +133,30 @@ namespace Bryllite.Utils.AppBase
 
             try
             {
+                // map command handlers
+                OnMapCommandHandlers();
+
                 // app initialize
                 if (!OnAppInitialize())
-                    return -1;
+                    return (exitCode = -1);
 
                 // do command line process
                 OnMain();
 
                 // app cleanup
                 OnAppCleanup();
+
+                return exitCode;
             }
             catch (Exception ex)
             {
                 Log.Warning("Exception! ex=", ex);
-                return -99;
+                return (exitCode = -99);
             }
-
-            return exitCode;
+            finally
+            {
+                Log.Info("Bye, ", Assembly.GetEntryAssembly().GetName().Name, "!");
+            }
         }
 
         public Task<int> RunAsync(object context = null)
@@ -163,6 +200,8 @@ namespace Bryllite.Utils.AppBase
             var cmds = commands.Split(seperators);
             foreach (var cmd in cmds)
             {
+                if (string.IsNullOrEmpty(cmd)) continue;
+
                 lock (handlers)
                     handlers[cmd.ToLower()] = handler;
             }
@@ -178,48 +217,59 @@ namespace Bryllite.Utils.AppBase
             MapCommandHandler(command, string.Empty, handler);
         }
 
+        public virtual void OnMapCommandHandlers()
+        {
+        }
+
 
         protected void OnMain()
         {
-            Thread.Sleep(100);
-
-            BConsole.WriteLine();
-            BConsole.WriteLine(Color.White, "Welcome to the Bryllite console!");
-
-            while (!cts.IsCancellationRequested)
+            // console options
+            if (console)
             {
-                try
+                BConsole.WriteLine();
+                BConsole.WriteLine(Color.White, "Welcome to the Bryllite console!");
+
+                while (!cts.IsCancellationRequested)
                 {
-                    // show prompts
-                    ShowPrompts();
+                    try
+                    {
+                        // show prompts
+                        ShowPrompts();
 
-                    // intput stream
-                    string input = Console.ReadLine();
-                    if (string.IsNullOrEmpty(input)) continue;
+                        // intput stream
+                        string input = Console.ReadLine();
+                        if (string.IsNullOrEmpty(input)) continue;
 
-                    // read console input
-                    string[] tokens = input.Trim().Split(seperators);
-                    if (tokens.Length == 0) continue;
+                        // read console input
+                        string[] tokens = input.Trim().Split(seperators);
+                        if (tokens.Length == 0) continue;
 
-                    // command( operator )
-                    string command = tokens[0];
-                    if (command.Length == 0) continue;
+                        // command( operator )
+                        string command = tokens[0];
+                        if (command.Length == 0) continue;
 
-                    // arguments
-                    List<string> args = new List<string>();
-                    foreach (var arg in tokens.Skip(1).ToArray())
-                        if (arg.Length > 0) args.Add(arg);
+                        // arguments
+                        List<string> args = new List<string>();
+                        foreach (var arg in tokens.Skip(1).ToArray())
+                            if (arg.Length > 0) args.Add(arg);
 
-                    // invoke command handler
-                    var handler = GetHandler(command);
-                    if (!ReferenceEquals(handler, null))
-                        handler.Invoke(args.ToArray());
-                    else BConsole.WriteLine(Color.DarkYellow, "what? '", Color.DarkGreen, command, Color.DarkYellow, "' unknown!", " 'h' or 'help' for commands list");
+                        // invoke command handler
+                        var handler = GetHandler(command);
+                        if (!ReferenceEquals(handler, null))
+                            handler.Invoke(args.ToArray());
+                        else BConsole.WriteLine(Color.DarkYellow, "what? '", Color.DarkGreen, command, Color.DarkYellow, "' unknown!", " 'h' or 'help' for commands list");
+                    }
+                    catch (Exception ex)
+                    {
+                        BConsole.WriteLine(Color.Red, "console exception! ex.Message=", ex.Message);
+                    }
                 }
-                catch (Exception e)
-                {
-                    BConsole.WriteLine(ConsoleColor.Red, "console exception! e=", e.Message);
-                }
+            }
+            else
+            {
+                while (!cts.IsCancellationRequested)
+                    Thread.Sleep(10);
             }
         }
 
@@ -255,9 +305,14 @@ namespace Bryllite.Utils.AppBase
             BConsole.WriteLine(config);
         }
 
+        protected virtual void OnCommandShowEnv(string[] args)
+        {
+            BConsole.WriteLine(args.Length > 0 ? env.GetValue(args[0], StringComparison.OrdinalIgnoreCase)?.Value<string>() : env.ToString());
+        }
+
         protected virtual void OnCommandShowArgs(string[] args)
         {
-            bool json = args.Length > 0 ? Convert.ToBoolean(args[0]) : false;
+            bool json = args.Length > 0 ? Convert.ToBoolean(args[0]) : true;
 
             if (json)
                 BConsole.WriteLine(this.args.ToJObject());
@@ -281,12 +336,12 @@ namespace Bryllite.Utils.AppBase
         protected JObject GetNetTime()
         {
             var time = new JObject();
-            time.Put("synchronized", NetTime.Synchronized);
-            time.Put("provider", NetTime.ActiveTimeServer);
-            time.Put("utc", NetTime.UtcNow);
-            time.Put("now", DateTime.Now);
-            time.Put("unixtime", NetTime.UnixTime);
-            time.Put("timediff", NetTime.TimeDiff);
+            time.Put<bool>("synchronized", NetTime.Synchronized);
+            time.Put<string>("provider", NetTime.ActiveTimeServer);
+            time.Put<DateTime>("utc", NetTime.UtcNow);
+            time.Put<DateTime>("now", DateTime.Now);
+            time.Put<int>("unixtime", NetTime.UnixTime);
+            time.Put<TimeSpan>("timediff", NetTime.TimeDiff);
 
             return time;
         }

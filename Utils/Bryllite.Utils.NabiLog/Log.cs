@@ -28,13 +28,13 @@ namespace Bryllite.Utils.NabiLog
     /// </summary>
     public class Log
     {
-        public static readonly string PANIC = "panic";
-        public static readonly string ERROR = "error";
-        public static readonly string WARNING = "warning";
-        public static readonly string DEBUG = "debug";
-        public static readonly string TRACE = "trace";
-        public static readonly string VERB = "verb";
-        public static readonly string INFO = "info";
+        public static readonly string PANIC = "PANIC";
+        public static readonly string ERROR = "ERROR";
+        public static readonly string WARNING = "WARN";
+        public static readonly string DEBUG = "DEBUG";
+        public static readonly string TRACE = "TRACE";
+        public static readonly string VERB = "VERB";
+        public static readonly string INFO = "INFO";
 
         public static readonly string EOL = "\r\n";
 
@@ -103,6 +103,14 @@ namespace Bryllite.Utils.NabiLog
             }
         }
 
+        public static string CallerName
+        {
+            get
+            {
+                var caller = Caller;
+                return caller.className + "." + caller.methodName + "()";
+            }
+        }
 
         static Log()
         {
@@ -160,48 +168,129 @@ namespace Bryllite.Utils.NabiLog
             if (condition) WriteLine(args);
         }
 
+        //public static void Panic(params object[] args)
+        //{
+        //    // Panic은 filter 정보를 무시하고 항상 실행한다.
+        //    //if ((Filter & LogLevel.Panic) == 0) return;
+
+        //    lock (Lock)
+        //    {
+        //        WriteTime();
+        //        WriteType(PANIC, Color.DarkRed);
+        //        Write(args); Write(EOL);
+        //        WriteCallStack();
+
+        //        // panic일때는 프로세스를 종료한다.
+        //        Environment.Exit(-1);
+        //    }
+        //}
+
+        //public static void Error(params object[] args)
+        //{
+        //    if ((Filter & LogLevel.Error) == 0) return;
+
+        //    lock (Lock)
+        //    {
+        //        WriteTime();
+        //        WriteType(ERROR, Color.Red);
+        //        Write(args); Write(EOL);
+        //        WriteCallStack();
+
+        //        // 에러일때는 예외 발생
+        //        throw new Exception(BuildString(args));
+        //    }
+        //}
+
+        //public static void Warning(params object[] args)
+        //{
+        //    if ((Filter & LogLevel.Warning) == 0) return;
+
+        //    lock (Lock)
+        //    {
+        //        WriteTime();
+        //        WriteType(WARNING, Color.DarkYellow);
+        //        Write(args); Write(EOL);
+        //    }
+        //}
+
+        //public static void Debug(params object[] args)
+        //{
+        //    if ((Filter & LogLevel.Debug) == 0) return;
+
+        //    lock (Lock)
+        //    {
+        //        WriteTime();
+        //        WriteType(DEBUG, Color.Gray);
+        //        Write(args); Write(EOL);
+        //    }
+        //}
+
+        //public static void Trace(params object[] args)
+        //{
+        //    if ((Filter & LogLevel.Trace) == 0) return;
+
+        //    lock (Lock)
+        //    {
+        //        WriteTime();
+        //        WriteType(TRACE, Color.White);
+        //        Write(args); Write(EOL);
+        //    }
+        //}
+
+        //public static void Verb(params object[] args)
+        //{
+        //    if ((Filter & LogLevel.Verb) == 0) return;
+
+        //    lock (Lock)
+        //    {
+        //        WriteTime();
+        //        Write(args); Write(EOL);
+        //    }
+        //}
+
+        //public static void Info(params object[] args)
+        //{
+        //    if ((Filter & LogLevel.Info) == 0) return;
+
+        //    lock (Lock)
+        //    {
+        //        WriteTime();
+        //        Write(args); Write(EOL);
+        //    }
+        //}
+
         public static void Panic(params object[] args)
         {
-            // Panic은 filter 정보를 무시하고 항상 실행한다.
-            //if ((Filter & LogLevel.Panic) == 0) return;
-
             lock (Lock)
             {
-                WriteTime();
-                WriteType(PANIC, Color.DarkRed);
-                Write(args); Write(EOL);
+                Write(Color.DarkRed, PANIC, " [", Color.DarkGray, TimeCode, "] ");
+                WriteLine(args);
                 WriteCallStack();
-
-                // panic일때는 프로세스를 종료한다.
-                Environment.Exit(-1);
             }
+
+            // panic일때는 프로세스를 종료한다.
+            Environment.Exit(-1);
         }
 
         public static void Error(params object[] args)
         {
-            if ((Filter & LogLevel.Error) == 0) return;
-
             lock (Lock)
             {
-                WriteTime();
-                WriteType(ERROR, Color.Red);
-                Write(args); Write(EOL);
+                Write(Color.Red, ERROR, " [", Color.Default, TimeCode, "] ");
+                WriteLine(args);
                 WriteCallStack();
-
-                // 에러일때는 예외 발생
-                throw new Exception(BuildString(args));
             }
+
+            // error 일때는 예외 발생
+            throw new Exception(BuildString(args));
         }
 
         public static void Warning(params object[] args)
         {
-            if ((Filter & LogLevel.Warning) == 0) return;
-
             lock (Lock)
             {
-                WriteTime();
-                WriteType(WARNING, Color.DarkYellow);
-                Write(args); Write(EOL);
+                Write(Color.DarkYellow, WARNING, " [", Color.Default, TimeCode, "] /", Color.DarkGray, CallerName, "/ ");
+                WriteLine(args);
             }
         }
 
@@ -211,9 +300,8 @@ namespace Bryllite.Utils.NabiLog
 
             lock (Lock)
             {
-                WriteTime();
-                WriteType(DEBUG, Color.Gray);
-                Write(args); Write(EOL);
+                Write(Color.Cyan, DEBUG, " [", Color.Default, TimeCode, "] ");
+                WriteLine(args);
             }
         }
 
@@ -223,9 +311,8 @@ namespace Bryllite.Utils.NabiLog
 
             lock (Lock)
             {
-                WriteTime();
-                WriteType(TRACE, Color.White);
-                Write(args); Write(EOL);
+                Write(Color.DarkCyan, TRACE, " [", Color.Default, TimeCode, "] ");
+                WriteLine(args);
             }
         }
 
@@ -235,8 +322,8 @@ namespace Bryllite.Utils.NabiLog
 
             lock (Lock)
             {
-                WriteTime();
-                Write(args); Write(EOL);
+                Write("[", Color.Default, TimeCode, "] ");
+                WriteLine(args);
             }
         }
 
@@ -246,8 +333,8 @@ namespace Bryllite.Utils.NabiLog
 
             lock (Lock)
             {
-                WriteTime();
-                Write(args); Write(EOL);
+                Write(Color.DarkGreen, INFO, " [", Color.Default, TimeCode, "] ");
+                WriteLine(args);
             }
         }
 
@@ -266,19 +353,6 @@ namespace Bryllite.Utils.NabiLog
                 else sb.Append(arg.ToString());
             }
             return sb.ToString();
-        }
-
-        private static void WriteTime()
-        {
-            Write("[", Color.DarkGreen, TimeCode, "] ");
-        }
-
-        private static void WriteType(string type, Color color)
-        {
-            var caller = Caller;
-            string tag = $"{caller.className}.{caller.methodName}";
-
-            Write(color, type, "/", Color.DarkGray, tag, ": ");
         }
 
         private static void WriteCallStack(int depth = 0)

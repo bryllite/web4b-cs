@@ -9,62 +9,47 @@ using Bryllite.Extensions;
 
 namespace Bryllite.Cryptography.Signers
 {
-    public class PublicKey
+    public class PublicKey : Hex
     {
         public const int KEY_LENGTH = Secp256k1Helper.PUBLIC_KEY_LENGTH;
-        public const int KEY_COMPRESSED_LENGTH = Secp256k1Helper.SERIALIZED_COMPRESSED_PUBKEY_LENGTH;
-        public const int KEY_UNCOMPRESSED_LENGTH = Secp256k1Helper.SERIALIZED_UNCOMPRESSED_PUBKEY_LENGTH;
-
-        public static readonly PublicKey Null = new PublicKey();
-
-        public byte[] Bytes { get; private set; }
+        public const int COMPRESSED_KEY_LENGTH = Secp256k1Helper.SERIALIZED_COMPRESSED_PUBKEY_LENGTH;
+        public const int UNCOMPRESSED_LEY_LENGTH = Secp256k1Helper.SERIALIZED_UNCOMPRESSED_PUBKEY_LENGTH;
 
         // compressed key
-        public byte[] CompressedKey => PublicKeySerialize(Bytes, true);
+        public byte[] CompressedKey => PublicKeySerialize(Value, true);
 
         // uncompressed key
-        public byte[] UncompressedKey => PublicKeySerialize(Bytes, false);
+        public byte[] UncompressedKey => PublicKeySerialize(Value, false);
 
-        // public key readable
+        // public key
         public byte[] Key => UncompressedKey.Skip(1).ToArray();
 
-        // x, y
-        public byte[] X => Key.Left();
-        public byte[] Y => Key.Right();
+        // x coordinates
+        public H256 X => Key.Left();
 
-        public H256 Hash => Key.Hash256();
+        // y coordinates
+        public H256 Y => Key.Right();
 
-        // To Address
-        public Address Address => Address.ToETH(this);
+        public Address Address => Address.ToETHAddress(this);
 
 
-        protected PublicKey()
+        public PublicKey(Hex hex) 
         {
-        }
-
-        public PublicKey(byte[] bytes) : this()
-        {
-            switch (bytes.Length)
+            switch (hex.Length)
             {
                 case KEY_LENGTH:
-                    Bytes = bytes.ToArray();
+                    value = hex;
                     return;
-
-                case KEY_COMPRESSED_LENGTH:
-                case KEY_UNCOMPRESSED_LENGTH:
-                    Bytes = PublicKeyParse(bytes);
+                case COMPRESSED_KEY_LENGTH:
+                case UNCOMPRESSED_LEY_LENGTH:
+                    value = PublicKeyParse(hex);
                     return;
 
                 default:
                     break;
             }
 
-            throw new FormatException("invalid key bytes!");
-        }
-
-        public byte[] ToByteArray()
-        {
-            return Bytes;
+            throw new FormatException("wrong public key bytes");
         }
 
         public static byte[] PublicKeyParse(byte[] bytes)
@@ -77,14 +62,14 @@ namespace Bryllite.Cryptography.Signers
             return Secp256k1Helper.PublicKeySerialize(key, compress);
         }
 
-        public static PublicKey Parse(byte[] bytes)
+        public static new PublicKey Parse(byte[] bytes)
         {
             return new PublicKey(bytes);
         }
 
-        public static PublicKey Parse(string hex)
+        public static new PublicKey Parse(string hex)
         {
-            return Parse(hex.ToByteArray());
+            return new PublicKey(hex);
         }
 
         public static bool TryParse(byte[] bytes, out PublicKey key)
@@ -96,7 +81,7 @@ namespace Bryllite.Cryptography.Signers
             }
             catch (Exception)
             {
-                key = Null;
+                key = null;
                 return false;
             }
         }
@@ -105,53 +90,35 @@ namespace Bryllite.Cryptography.Signers
         {
             try
             {
-                key = Parse(hex.ToByteArray());
+                key = Parse(hex);
                 return !ReferenceEquals(key, null);
             }
             catch (Exception)
             {
-                key = Null;
+                key = null;
                 return false;
             }
         }
 
         public override string ToString()
         {
-            return Hex.ToString(UncompressedKey);
+            return ToString(true);
         }
 
-        public override int GetHashCode()
+        public new string ToString(bool compress)
         {
-            return new BigInteger(Bytes).GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            var o = obj as PublicKey;
-            return !ReferenceEquals(o, null) && Bytes.SequenceEqual(o.Bytes);
-        }
-
-        public static bool operator ==(PublicKey left, PublicKey right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (ReferenceEquals(left, null)) return false;
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(PublicKey left, PublicKey right)
-        {
-            return !(left == right);
+            return compress ? ToString(CompressedKey) : ToString(UncompressedKey);
         }
 
         public bool Verify(byte[] signature, byte[] messageHash)
         {
-            Guard.Assert(!messageHash.IsNullOrEmpty() && messageHash.Length == 32, "messageHash.length should be 32");
-            return Secp256k1Helper.Verify(signature, messageHash, Bytes);
+            Guard.Assert(messageHash.Length == 32, "messageHash.length should be 32");
+            return Secp256k1Helper.Verify(signature, messageHash, Value);
         }
 
         public bool Verify(Signature signature, byte[] messageHash)
         {
-            return Verify(signature.Bytes, messageHash);
+            return Verify((byte[])signature, messageHash);
         }
 
         public static implicit operator PublicKey(byte[] bytes)
@@ -166,13 +133,12 @@ namespace Bryllite.Cryptography.Signers
 
         public static implicit operator byte[] (PublicKey key)
         {
-            return key?.ToByteArray();
+            return key?.Value;
         }
 
         public static implicit operator string(PublicKey key)
         {
             return key?.ToString();
         }
-
     }
 }

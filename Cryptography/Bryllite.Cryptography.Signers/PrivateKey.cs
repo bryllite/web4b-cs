@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using Bryllite.Cryptography.Hash;
@@ -8,78 +9,46 @@ using Bryllite.Extensions;
 
 namespace Bryllite.Cryptography.Signers
 {
-    public class PrivateKey
+    public class PrivateKey : Hex
     {
-        public static readonly int KEY_LENGTH = Secp256k1Helper.PRIVATE_KEY_LENGTH;
-        public static readonly int CHAIN_CODE_LENGTH = KEY_LENGTH;
-
-        // null key
-        public static readonly PrivateKey Null = new PrivateKey();
+        public const int KEY_LENGTH = Secp256k1Helper.PRIVATE_KEY_LENGTH;
+        public const int CHAIN_CODE_LENGTH = H256.BYTE_LENGTH;
 
         // private key
-        public H256 Key { get; private set; }
+        public H256 Key
+        {
+            get { return Value.Take(KEY_LENGTH).ToArray(); }
+        }
 
         // chain code
-        public H256 ChainCode { get; private set; }
-
-        // key hex ( 64 or 128 length )
-        public string Hex => ToByteArray().ToHexString();
+        public H256 ChainCode
+        {
+            get { return Length >= KEY_LENGTH + CHAIN_CODE_LENGTH ? Value.Skip(KEY_LENGTH).Take(CHAIN_CODE_LENGTH).ToArray() : null; }
+        }
 
         // public key
-        public PublicKey PublicKey => ToPublicKey();
-
-        // EOA Address
-        public Address Address => PublicKey.Address;
-
-        protected PrivateKey()
+        public PublicKey PublicKey
         {
+            get { return PublicKey.Parse(Secp256k1Helper.PublicKeyCreate(Key)); }
         }
 
-        public PrivateKey(H256 key) : this()
+        // address
+        public Address Address
         {
-            Key = key;
+            get { return PublicKey.Address; }
         }
 
-        public PrivateKey(H256 key, H256 chainCode) : this(key)
+        public PrivateKey(Hex key) : base(key)
         {
-            ChainCode = chainCode;
+            Guard.Assert(Length == KEY_LENGTH || Length == KEY_LENGTH + CHAIN_CODE_LENGTH, "wrong key bytes");
         }
 
-        public PrivateKey(byte[] bytes) : this()
-        {
-            if (bytes.IsNullOrEmpty()) throw new ArgumentNullException("empty key bytes");
-
-            if (bytes.Length == KEY_LENGTH)
-            {
-                Key = bytes;
-            }
-            else if (bytes.Length == KEY_LENGTH + CHAIN_CODE_LENGTH)
-            {
-                Key = bytes.Slice(0, KEY_LENGTH);
-                ChainCode = bytes.Slice(KEY_LENGTH, CHAIN_CODE_LENGTH);
-            }
-            else throw new ArgumentException("invalid key bytes");
-        }
-
-        public PrivateKey(string hex) : this(hex.ToByteArray())
-        {
-        }
-
-        public PrivateKey(string hex, string chaincode) : this(hex.ToByteArray(), chaincode.ToByteArray())
-        {
-        }
-
-        public byte[] ToByteArray()
-        {
-            return Key.Value.Append((byte[])ChainCode);
-        }
-
-        public static PrivateKey Parse(byte[] bytes)
+        public static new PrivateKey Parse(byte[] bytes)
         {
             return new PrivateKey(bytes);
         }
 
-        public static PrivateKey Parse(string hex)
+        public static new PrivateKey Parse(string hex)
         {
             return new PrivateKey(hex);
         }
@@ -89,9 +58,9 @@ namespace Bryllite.Cryptography.Signers
             try
             {
                 key = Parse(bytes);
-                return !ReferenceEquals(key, null);
+                return true;
             }
-            catch (Exception)
+            catch
             {
                 key = null;
                 return false;
@@ -103,24 +72,23 @@ namespace Bryllite.Cryptography.Signers
             try
             {
                 key = Parse(hex);
-                return !ReferenceEquals(key, null);
+                return true;
             }
-            catch (Exception)
+            catch
             {
                 key = null;
                 return false;
             }
         }
 
-
-        public PrivateKey Clone()
+        public new PrivateKey Clone()
         {
-            return new PrivateKey(Key, ChainCode);
+            return new PrivateKey(this);
         }
 
         public PrivateKey CreateEcdhKey(PublicKey key)
         {
-            return new PrivateKey(Secp256k1Helper.CreateEcdhKey(Key, key.Bytes));
+            return new PrivateKey(Secp256k1Helper.CreateEcdhKey(Key, key));
         }
 
         public static PrivateKey CreateKey()
@@ -139,34 +107,6 @@ namespace Bryllite.Cryptography.Signers
             return Secp256k1Helper.SecretKeyVerify(key);
         }
 
-        public override string ToString()
-        {
-            return Hex;
-        }
-
-        public override int GetHashCode()
-        {
-            return new BigInteger(ToByteArray()).GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            var o = obj as PrivateKey;
-            return !ReferenceEquals(o, null) && Key == o.Key && ChainCode == o.ChainCode;
-        }
-
-        public static bool operator ==(PrivateKey left, PrivateKey right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (ReferenceEquals(left, null)) return false;
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(PrivateKey left, PrivateKey right)
-        {
-            return !(left == right);
-        }
-
         public PrivateKey CKD(byte[] seed)
         {
             List<byte> bytes = new List<byte>();
@@ -175,9 +115,9 @@ namespace Bryllite.Cryptography.Signers
             bytes.AddRange(ChainCode ?? Key.ToByteArray().Hash256());
             bytes.AddRange(seed);
 
-            (H256 key, H256 chainCode) = bytes.ToArray().Hash512().Divide();
-
-            return CheckPrivateKey(key) ? new PrivateKey(key, chainCode) : CKD((byte[])key);
+            byte[] h512 = KeccakProvider.Hash512(bytes.ToArray());
+            (H256 key, H256 chaincode) = h512.Divide();
+            return CheckPrivateKey(key) ? new PrivateKey(h512) : CKD((byte[])key);
         }
 
         public PrivateKey CKD(string keyPath)
@@ -196,14 +136,9 @@ namespace Bryllite.Cryptography.Signers
             return key;
         }
 
-        public PublicKey ToPublicKey()
-        {
-            return PublicKey.Parse(Secp256k1Helper.PublicKeyCreate(Key));
-        }
-
         public Signature Sign(byte[] messageHash)
         {
-            Guard.Assert(!messageHash.IsNullOrEmpty() && messageHash.Length == 32, "messageHash length shoud be 32 bytes");
+            Guard.Assert(messageHash.Length == 32, "messageHash length shoud be 32 bytes");
             return Signature.Parse(Secp256k1Helper.SignRecoverable(messageHash, Key));
         }
 
@@ -217,14 +152,14 @@ namespace Bryllite.Cryptography.Signers
             return TryParse(hex, out PrivateKey key) ? key : null;
         }
 
-        public static implicit operator byte[](PrivateKey key)
+        public static implicit operator byte[] (PrivateKey key)
         {
-            return key?.ToByteArray();
+            return key?.Value;
         }
 
         public static implicit operator string(PrivateKey key)
         {
-            return key?.Hex;
+            return key?.ToString();
         }
     }
 }

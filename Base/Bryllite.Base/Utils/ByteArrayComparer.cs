@@ -17,7 +17,7 @@ namespace Bryllite
 
         public int GetHashCode(byte[] bytes)
         {
-            return new BigInteger(bytes).GetHashCode();
+            return Hex.GetHashCode(bytes);
         }
     }
 }

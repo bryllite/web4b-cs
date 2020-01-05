@@ -7,15 +7,16 @@ namespace Bryllite
     {
         // bryllite version
         public static readonly int Major = 0;
-        public static readonly int Minor = 5;
-        public static readonly int Revision = 4;
+        public static readonly int Minor = 6;
+        public static readonly int Revision = 0;
 
         // version string
         public static readonly string Ver;
 
         static Version()
         {
-            Ver = Revision > 0 ? $"{Major}.{Minor}.{Revision}" : $"{Major}.{Minor}";
+            //Ver = Revision > 0 ? $"{Major}.{Minor}.{Revision}" : $"{Major}.{Minor}";
+            Ver = $"{Major}.{Minor}.{Revision}";
         }
 
         public static string GetVersion()

@@ -37,5 +37,38 @@ namespace Bryllite.Extensions
             return string.Compare(left, right, !casesensitive) == 0;
         }
 
+        /// <summary>
+        /// ellipsis string
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        public static string Ellipsis(this string str, int length)
+        {
+            try
+            {
+                if (str.Length <= length)
+                    return str;
+
+                return str.Substring(0, length) + "…";
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        public static string Padding(this string str, int length)
+        {
+            try
+            {
+                return string.Format($"{{0,{length}}}", str);
+            }
+            catch
+            {
+                return str;
+            }
+        }
+
     }
 }

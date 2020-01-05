@@ -46,8 +46,6 @@ namespace Bryllite.Cryptography.Signers.Tests
 
             byte[] hashed = Sha2Provider.Hash256(Hex.ToByteArray("0x033a17fe5fa33c4f2c7e61799a65061214913f39bfcbee178ab351493d5ee17b2f"));
             Assert.Equal("0x5935d0476af9df2998efb60383adf2ff23bc928322cfbb738fca88e49d557d7e", Hex.ToString(hashed));
-
         }
-
     }
 }

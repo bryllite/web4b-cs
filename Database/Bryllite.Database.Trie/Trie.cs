@@ -43,7 +43,7 @@ namespace Bryllite.Database.Trie
 
         public byte[] Read(H256 hash)
         {
-            return db.Get(hash);
+            return !ReferenceEquals(hash, null) ? db.Get(hash) : null;
         }
 
         public void Write(byte[] rlp)
@@ -119,10 +119,13 @@ namespace Bryllite.Database.Trie
         // COMMIT
         public H256 Commit()
         {
-            if (!HasRoot) return null;
+            lock (db)
+            {
+                if (!HasRoot) return null;
 
-            Commit(RootNode);
-            return RootHash;
+                Commit(RootNode);
+                return RootHash;
+            }
         }
 
         public void Dispose()
@@ -132,20 +135,17 @@ namespace Bryllite.Database.Trie
         }
 
         // 현재 트라이의 모든 키/밸류 쌍을 얻는다.
-        public IEnumerator<KeyValuePair<byte[], byte[]>> GetEnumerator()
+        public IEnumerable<KeyValuePair<byte[], byte[]>> AsEnumerable()
         {
-            var list = new List<KeyValuePair<byte[], byte[]>>();
+            var enums = new List<KeyValuePair<byte[], byte[]>>();
 
-            if (HasRoot)
-                ToList(RootNode, TrieKey.EmptyKey, list);
+            lock (db)
+            {
+                if (HasRoot)
+                    ToList(RootNode, TrieKey.EmptyKey, enums);
+            }
 
-            foreach (var entry in list)
-                yield return entry;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
+            return enums;
         }
 
         protected TrieNode GetNodeByHash(H256 hash)

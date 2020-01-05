@@ -7,62 +7,24 @@ using Org.BouncyCastle.Math;
 
 namespace Bryllite.Cryptography.Signers
 {
-    public class Address : IEquatable<Address>
+    public class Address : Hex
     {
-        // address type
-        public enum AddressType : byte
+        // minimum length of address
+        public const int MIN_LENGTH = 20;
+
+        public Address(Hex hex) : base(hex)
         {
-            NA = 0x00,
-            EOA = 0xbc,
-            IOA = 0x1a,
-            CA = 0xca,
-            ETH = 0xea,
+            Guard.Assert(Length >= MIN_LENGTH, "address length");
         }
 
-        // address bytes
-        public byte[] Bytes { get; private set; }
-
-        // address hex string
-        public string Hex => Bytes.ToHexString();
-
-        // address byte length
-        public int Length => Bytes.Length;
-
-        public Address(byte[] bytes)
-        {
-            Bytes = bytes.ToArray();
-        }
-
-        public Address(string hex) : this(hex.ToByteArray())
-        {
-        }
-
-        public Address(Address other) : this(other.Bytes)
-        {
-        }
-
-        public static Address Parse(byte[] bytes)
-        {
-            return new Address(bytes);
-        }
-
-        public static Address Parse(string hex)
+        public static new Address Parse(string hex)
         {
             return new Address(hex);
         }
 
-        public static bool TryParse(byte[] bytes, out Address address)
+        public static new Address Parse(byte[] bytes)
         {
-            try
-            {
-                address = Parse(bytes);
-                return !ReferenceEquals(address, null);
-            }
-            catch
-            {
-                address = null;
-                return false;
-            }
+            return new Address(bytes);
         }
 
         public static bool TryParse(string hex, out Address address)
@@ -70,7 +32,7 @@ namespace Bryllite.Cryptography.Signers
             try
             {
                 address = Parse(hex);
-                return !ReferenceEquals(address, null);
+                return true;
             }
             catch
             {
@@ -79,97 +41,50 @@ namespace Bryllite.Cryptography.Signers
             }
         }
 
-        public override string ToString()
+        public static bool TryParse(byte[] bytes, out Address address)
         {
-            return Hex;
+            try
+            {
+                address = Parse(bytes);
+                return true;
+            }
+            catch
+            {
+                address = null;
+                return false;
+            }
         }
 
-        public override int GetHashCode()
+        public static implicit operator Address(string address)
         {
-            return new BigInteger(Bytes).GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as Address);
-        }
-
-        public bool Equals(Address other)
-        {
-            return !ReferenceEquals(other, null) && Bytes.SequenceEqual(other.Bytes);
-        }
-
-        public static bool operator ==(Address left, Address right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (ReferenceEquals(left, null)) return false;
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(Address left, Address right)
-        {
-            return !(left == right);
-        }
-
-        public static implicit operator byte[] (Address address)
-        {
-            return address?.Bytes;
-        }
-
-        public static implicit operator string(Address address)
-        {
-            return address?.Hex;
+            return TryParse(address, out var hex) ? new Address(hex) : null;
         }
 
         public static implicit operator Address(byte[] bytes)
         {
-            return TryParse(bytes, out Address address) ? address : null;
+            return TryParse(bytes, out var hex) ? new Address(hex) : null;
         }
 
-        public static implicit operator Address(string hex)
+        public static implicit operator byte[](Address address)
         {
-            return TryParse(hex, out Address address) ? address : null;
+            return address?.Value;
         }
 
-        public static implicit operator Hex(Address address)
+        public static implicit operator string(Address address)
         {
-            return address?.Bytes;
+            return address?.ToString();
         }
 
-        public static implicit operator Address(Hex hex)
+
+        public static Address ToETHAddress(PublicKey key)
         {
-            return TryParse((byte[])hex, out Address address) ? address : null;
+            return key.Key.Hash256().Skip(12).ToArray();
         }
 
-        // to EOA Address
-        public static Address ToEOA(PublicKey key)
+        public static Address ToAddress(PublicKey key)
         {
-            List<byte> bytes = new List<byte>();
-
-            bytes.Add((byte)AddressType.EOA);
-            bytes.AddRange(key.Bytes.Hash256().Skip(12));
-            bytes.AddRange(bytes.ToArray().Hash256().Take(3));
-
-            return new Address(bytes.ToArray());
+            return key.CompressedKey.Hash256().Skip(12).ToArray();
         }
 
-        // to IOA Address
-        public static Address ToIOA(PublicKey key)
-        {
-            List<byte> bytes = new List<byte>();
-
-            bytes.Add((byte)AddressType.IOA);
-            bytes.AddRange(key.Bytes.Hash256().Take(20));
-            bytes.AddRange(bytes.ToArray().Hash256().Take(3));
-
-            return new Address(bytes.ToArray());
-        }
-
-        // to ETH Address
-        public static Address ToETH(PublicKey key)
-        {
-            byte[] hash = key.Key.Hash256();
-            return new Address(hash.Skip(12).ToArray());
-        }
     }
 }

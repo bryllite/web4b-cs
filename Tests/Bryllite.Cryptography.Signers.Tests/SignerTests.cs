@@ -23,8 +23,8 @@ namespace Bryllite.Cryptography.Signers.Tests
 
                 // private key, public key, signature length verify
                 Assert.Equal(PrivateKey.KEY_LENGTH, secKey.Key.Length);
-                Assert.Equal(PublicKey.KEY_LENGTH, pubKey.Bytes.Length);
-                Assert.Equal(Signature.BYTE_LENGTH, sig.Bytes.Length);
+                Assert.Equal(PublicKey.KEY_LENGTH, pubKey.Length);
+                Assert.Equal(Signature.LENGTH, sig.Length);
 
                 // verify signature
                 Assert.True(pubKey.Verify(sig, messageHash));

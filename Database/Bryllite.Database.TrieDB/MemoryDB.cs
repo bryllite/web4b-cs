@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Bryllite.Database.TrieDB
@@ -12,43 +13,53 @@ namespace Bryllite.Database.TrieDB
         private Dictionary<byte[], byte[]> db;
 
         // is db running?
-        public bool Running => !ReferenceEquals(db, null);
+        public bool Running
+        {
+            get
+            {
+                lock(this)
+                    return !ReferenceEquals(db, null);
+            }
+        }
+        
+        public IEnumerable<byte[]> Keys
+        {
+            get
+            {
+                lock (this)
+                    return db.Keys.ToArray();
+            }
+        }
 
-        public IEnumerable<byte[]> Keys => db.Keys;
-        public IEnumerable<byte[]> Values => db.Values;
+        public IEnumerable<byte[]> Values
+        {
+            get
+            {
+                lock (this)
+                    return db.Values.ToArray();
+            }
+        }
 
         public MemoryDB()
         {
-            Start();
         }
-
-        public IEnumerator<KeyValuePair<byte[], byte[]>> GetEnumerator()
-        {
-            return db.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
 
         public void Dispose()
         {
-            if (db != null)
+            lock (this)
             {
-                lock (db)
-                {
-                    db.Clear();
-                    db = null;
-                }
+                db?.Clear();
+                db = null;
             }
         }
 
         public void Start()
         {
-            Guard.Assert(db == null, "already started");
-            db = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+            lock (this)
+            {
+                Guard.Assert(db == null, "already started");
+                db = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+            }
         }
 
         public void Stop()
@@ -59,17 +70,22 @@ namespace Bryllite.Database.TrieDB
 
         public byte[] Get(byte[] key)
         {
-            if (db == null || key.IsNullOrEmpty()) return null;
-
-            lock (db)
-                return Has(key) ? db[key] : null;
+            try
+            {
+                lock (this)
+                    return Has(key) ? db[key] : null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public bool TryGet(byte[] key, out byte[] value)
         {
             try
             {
-                lock (db)
+                lock (this)
                 {
                     value = db[key];
                     return true;
@@ -84,28 +100,50 @@ namespace Bryllite.Database.TrieDB
 
         public bool Put(byte[] key, byte[] value)
         {
-            if (db == null || key.IsNullOrEmpty()) return false;
-
-            lock (db)
-                db[key] = value;
-
-            return true;
+            try
+            {
+                lock (this)
+                {
+                    db[key] = value;
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public bool Del(byte[] key)
         {
-            if (db == null || key.IsNullOrEmpty()) return false;
-
-            lock (db)
-                return db.Remove(key);
+            try
+            {
+                lock (this)
+                    return db.Remove(key);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public bool Has(byte[] key)
         {
-            if (db == null || key.IsNullOrEmpty()) return false;
+            try
+            {
+                lock (this)
+                    return db.ContainsKey(key);
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
-            lock (db)
-                return db.ContainsKey(key);
+        public IEnumerable<KeyValuePair<byte[], byte[]>> AsEnumerable()
+        {
+            lock (this)
+                return db.AsEnumerable().ToArray();
         }
     }
 }

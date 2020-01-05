@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Bryllite.Database.Trie
 {
-    public interface ITrie : IDisposable, IEnumerable<KeyValuePair<byte[], byte[]>>
+    public interface ITrie : IDisposable
     {
         // trie root hash
         H256 RootHash { get; }
@@ -18,5 +18,7 @@ namespace Bryllite.Database.Trie
         // DB에 기록하거나 DB에서 읽는다.
         void Write(byte[] rlp);
         byte[] Read(H256 key);
+
+        IEnumerable<KeyValuePair<byte[], byte[]>> AsEnumerable();
     }
 }

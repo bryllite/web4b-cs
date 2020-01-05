@@ -33,8 +33,8 @@ namespace Bryllite.Utils.Currency
         public static readonly int PRECISION = 8;
         public static readonly int BLOCK_REWARD = 100;
         public static readonly long HALVING_BLOCK = 1051200;
-        public static readonly int BONUS_BLOCK = 360;
-        public static readonly decimal BONUS_RATE = 12.5m;
+        public static readonly int BONUS_BLOCK = 3000;
+        public static readonly decimal BONUS_RATE = 100m;
 
         // beryl per 1 coin
         public static readonly decimal DECIMALS = new decimal(Math.Pow(10, PRECISION));

@@ -7,7 +7,12 @@ namespace Bryllite
     // 32 bytes 바이트 배열 클래스 해시값을 저장하는 용도로 사용한다
     public class H256 : Hex
     {
-        public static readonly int BYTE_LENGTH = 32;
+        public const int BYTE_LENGTH = 32;
+
+        // max value
+        public static readonly H256 MaxValue = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+        // min value
+        public static readonly H256 MinValue = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         public H256(byte[] bytes) : base(bytes)
         {

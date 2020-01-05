@@ -10,7 +10,16 @@ namespace Bryllite.Utils.AppBase
         // arguments
         private string[] args;
 
-        public CommandLineParser() : base()
+        // indexer
+        public string this[int idx]
+        {
+            get
+            {
+                return args.Length > idx ? args[idx] : null;
+            }
+        }
+
+        public CommandLineParser(bool casesensitive = true) : base(casesensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase)
         {
         }
 
@@ -39,36 +48,27 @@ namespace Bryllite.Utils.AppBase
             return string.Join(" ", args);
         }
 
-        public bool Has(string key)
+        public bool Contains(string key)
         {
             return ContainsKey(key);
         }
 
-        public string Value(string key)
-        {
-            return Value<string>(key);
-        }
-
-        public T Value<T>(string key)
+        public T Value<T>(string key, T def = default(T))
         {
             if (typeof(T) == typeof(bool))
-                return (T)(object)Has(key);
+                return (T)(object)Contains(key);
 
-            return TryGetValue(key, out var value) ? ((JToken)value).Value<T>() : default(T);
+            return TryGetValue(key, out var value) ? ((JToken)value).Value<T>() : def;
         }
 
-        public bool TryGetValue<T>(string key, out T value)
+        public string Value(string key)
         {
-            try
-            {
-                value = Value<T>(key);
-                return true;
-            }
-            catch
-            {
-                value = default(T);
-                return false;
-            }
+            return Value<string>(key, default(string));
+        }
+
+        public string Value(string key, string def)
+        {
+            return Value<string>(key, def);
         }
     }
 }

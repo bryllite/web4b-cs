@@ -5,18 +5,16 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>0.6.0</Version>
-    <Authors>Bryllite Ltd.</Authors>
-    <Description>Modified Merkle Patricia Trie library for Bryllite.</Description>
+    <Authors>Bryllite ltd.</Authors>
+    <Description>Web4b cyprus library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>
     <PackageLicenseUrl>https://github.com/bryllite/web4b-cs/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/bryllite/web4b-cs</PackageProjectUrl>
-    <PackageTags>bryllite modified merkle patricia trie</PackageTags>
+    <PackageTags>bryllite rpc web4b cyprus</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Cryptography\Bryllite.Cryptography.Hash\Bryllite.Cryptography.Hash.csproj" />
-    <ProjectReference Include="..\..\Utils\Bryllite.Utils.Rlp\Bryllite.Utils.Rlp.csproj" />
-    <ProjectReference Include="..\Bryllite.Database.TrieDB\Bryllite.Database.TrieDB.csproj" />
+    <ProjectReference Include="..\Bryllite.Rpc.Web4b\Bryllite.Rpc.Web4b.csproj" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>0.5.5</Version>
+    <Version>0.6.0</Version>
     <Authors>Bryllite Ltd.</Authors>
     <Description>TrieDB library for Bryllite.</Description>
     <Copyright>COPYRIGHT (C) BRYLLITE LTD. ALL RIGHTS RESERVED</Copyright>

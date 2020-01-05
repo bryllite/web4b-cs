@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Bryllite.Database.TrieDB
@@ -24,38 +25,21 @@ namespace Bryllite.Database.TrieDB
         private Encoding encoding;
 
         // db path
-        public string Path => path;
+        public string DataPath => path;
 
-        public IEnumerable<byte[]> Keys
+        public IEnumerable<byte[]> Keys => AsEnumerable().Select(kv => kv.Key);
+
+        public IEnumerable<byte[]> Values => AsEnumerable().Select(kv => kv.Value);
+
+
+        public bool Running
         {
             get
             {
-                List<byte[]> keys = new List<byte[]>();
-                lock (db)
-                {
-                    foreach (var entry in this)
-                        keys.Add(entry.Key);
-                }
-                return keys;
+                lock(this)
+                    return !ReferenceEquals(db, null);
             }
         }
-
-        public IEnumerable<byte[]> Values
-        {
-            get
-            {
-                List<byte[]> values = new List<byte[]>();
-                lock (db)
-                {
-                    foreach (var entry in this)
-                        values.Add(entry.Value);
-                }
-                return values;
-            }
-        }
-
-
-        public bool Running => !ReferenceEquals(db, null);
 
         public FileDB(string path) : this(path, DefaultOptions, DefaultEncoding)
         {
@@ -77,35 +61,24 @@ namespace Bryllite.Database.TrieDB
             this.encoding = encoding;
         }
 
-        public IEnumerator<KeyValuePair<byte[], byte[]>> GetEnumerator()
-        {
-            return db.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-
         public void Dispose()
         {
-            if (db != null)
+            lock (this)
             {
-                lock (db)
-                {
-                    db.Close();
-                    db = null;
-                }
+                db?.Close();
+                db = null;
             }
         }
 
         public void Start()
         {
-            Guard.Assert(db == null, "already started");
+            lock (this)
+            {
+                Guard.Assert(db == null, "already started");
 
-            path.MakeSureDirectoryPathExists();
-            db = new DB(options, path, encoding);
+                path.MakeSureDirectoryPathExists();
+                db = new DB(options, path, encoding);
+            }
         }
 
         public void Stop()
@@ -115,17 +88,22 @@ namespace Bryllite.Database.TrieDB
 
         public byte[] Get(byte[] key)
         {
-            if (db == null || key.IsNullOrEmpty()) return null;
-
-            lock (db)
-                return db.Get(key);
+            try
+            {
+                lock (this)
+                    return db.Get(key);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public bool TryGet(byte[] key, out byte[] value)
         {
             try
             {
-                lock (db)
+                lock (this)
                 {
                     value = db.Get(key);
                     return true;
@@ -140,37 +118,64 @@ namespace Bryllite.Database.TrieDB
 
         public bool Put(byte[] key, byte[] value)
         {
-            if (db == null || key.IsNullOrEmpty()) return false;
-
-            lock (db)
-                db.Put(key, value);
-
-            return true;
+            try
+            {
+                lock (this)
+                {
+                    db.Put(key, value);
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public bool Del(byte[] key)
         {
-            if (db == null || key.IsNullOrEmpty()) return false;
-
-            lock (db)
-                db.Delete(key);
-
-            return true;
+            try
+            {
+                lock (this)
+                {
+                    db.Delete(key);
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public bool Has(byte[] key)
         {
-            return !ReferenceEquals(Get(key), null);
+            lock(this)
+                return !ReferenceEquals(Get(key), null);
         }
+
+        public IEnumerable<KeyValuePair<byte[], byte[]>> AsEnumerable()
+        {
+            List<KeyValuePair<byte[], byte[]>> enumerable = new List<KeyValuePair<byte[], byte[]>>();
+            lock (this)
+            {
+                foreach (var entry in db)
+                    enumerable.Add(entry);
+            }
+            return enumerable;
+        }
+
 
         public bool Repair()
         {
-            return !Running ? Repair(path) : false;
+            lock(this)
+                return !Running ? Repair(path) : false;
         }
 
         public bool Destroy()
         {
-            return !Running ? Destroy(path) : false;
+            lock(this)
+                return !Running ? Destroy(path) : false;
         }
 
         public static bool Destroy(string path)

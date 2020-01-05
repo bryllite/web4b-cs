@@ -14,7 +14,7 @@ namespace Bryllite.Core
         public static readonly int MAX_SIZE = 32 * 1024;
 
         // network id
-        public const byte MainNet = 0x00;
+        public const byte BrylliteNet = 0x00;
         public const byte CyprusNet = 0x80;
 
         // cyprus tx opcode
@@ -25,7 +25,7 @@ namespace Bryllite.Core
         // network id
         // bryllite.mainnet < 0x80
         // bryllite.cyprus >= 0x80
-        protected Hex chain = MainNet;
+        protected Hex chain = BrylliteNet;
         public byte Chain
         {
             get { return chain; }
@@ -41,11 +41,11 @@ namespace Bryllite.Core
         }
 
         // recipient address
-        protected Hex to = null;
+        protected Address to = null;
         public Address To
         {
-            get { return (byte[])to ?? null; }
-            set { to = value.Bytes; }
+            get { return to; }
+            set { to = value; }
         }
 
         // value
@@ -123,6 +123,9 @@ namespace Bryllite.Core
         // rlp stream
         public byte[] Rlp => ToRlp();
 
+        // tx size
+        public int Size => Rlp.Length;
+
         // cyprus net?
         public bool IsCyprusChain => Chain >= CyprusNet;
 
@@ -174,21 +177,21 @@ namespace Bryllite.Core
         {
             var json = new JObject();
 
-            json.Put("hash", Txid);
-            json.Put("chain", Hex.ToString(Chain, true));
-            json.Put("version", Hex.ToString(Version, true));
+            json.Put<string>("hash", Txid);
+            json.Put<string>("chain", Hex.ToString(Chain, true));
+            json.Put<string>("version", Hex.ToString(Version, true));
             json.Put<string>("from", From);
             json.Put<string>("to", To);
-            json.Put("value", Hex.ToString(Value, true));
-            json.Put("gas", Hex.ToString(Gas, true));
-            json.Put("nonce", Hex.ToString(Nonce, true));
-            json.Put("input", Hex.ToString(Data));
-            json.Put("extra", Hex.ToString(Extra));
-            json.Put("metadata", Hex.ToString(Metadata));
-            json.Put("v", Hex.ToString(V));
-            json.Put("r", Hex.ToString(R));
-            json.Put("s", Hex.ToString(S));
-            json.Put("size", Hex.ToString(Rlp.Length, true));
+            json.Put<string>("value", Hex.ToString(Value, true));
+            json.Put<string>("gas", Hex.ToString(Gas, true));
+            json.Put<string>("nonce", Hex.ToString(Nonce, true));
+            json.Put<string>("input", Hex.ToString(Data));
+            json.Put<string>("extra", Hex.ToString(Extra));
+            json.Put<string>("metadata", Hex.ToString(Metadata));
+            json.Put<string>("v", Hex.ToString(V));
+            json.Put<string>("r", Hex.ToString(R));
+            json.Put<string>("s", Hex.ToString(S));
+            json.Put<string>("size", Hex.ToString(Rlp.Length, true));
 
             return json;
         }

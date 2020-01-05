@@ -8,6 +8,11 @@ namespace Bryllite
     {
         public static readonly int BYTE_LENGTH = 20;
 
+        // max value
+        public static readonly H160 MaxValue = "0xffffffffffffffffffffffffffffffffffffffff";
+        // min value
+        public static readonly H160 MinValue = "0x0000000000000000000000000000000000000000";
+
         public H160(byte[] bytes) : base(bytes)
         {
             Guard.Assert(Length == BYTE_LENGTH, "wrong bytes length!");

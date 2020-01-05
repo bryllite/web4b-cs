@@ -10,6 +10,8 @@ namespace Bryllite.Rpc.Web4b.Providers
 {
     public class HttpProvider : IWeb4bProvider
     {
+        public const string CONTENT_TYPE_JSON = "application/json";
+
         // remote url
         private Uri remote;
 
@@ -29,7 +31,7 @@ namespace Bryllite.Rpc.Web4b.Providers
                 try
                 {
                     // json string to contents
-                    var contents = new StringContent(body, Encoding.UTF8, "application/json");
+                    var contents = new StringContent(body, Encoding.UTF8, CONTENT_TYPE_JSON);
 
                     // post async
                     var response = await connection.PostAsync(remote, contents, cancellation);
@@ -37,10 +39,15 @@ namespace Bryllite.Rpc.Web4b.Providers
                     // response
                     return await response.Content?.ReadAsStringAsync();
                 }
+                catch (HttpRequestException hrex)
+                {
+                    Log.Warning("HttpRequestException! hrex.Message=", hrex.Message);
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     Log.Warning("exception! ex.Message=", ex.Message);
-                    return null;
+                    throw;
                 }
             }
         }

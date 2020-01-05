@@ -193,7 +193,7 @@ namespace Bryllite.Database.Trie.Tests
 
                 // enumerate
                 int items = 0;
-                foreach (var kv in trie)
+                foreach (var kv in trie.AsEnumerable())
                 {
                     byte[] key = kv.Key;
                     byte[] value = kv.Value;
@@ -231,7 +231,7 @@ namespace Bryllite.Database.Trie.Tests
 
                 // enumerate
                 int items = 0;
-                foreach (var kv in trie)
+                foreach (var kv in trie.AsEnumerable())
                 {
                     byte[] key = kv.Key;
                     byte[] value = kv.Value;
